@@ -135,9 +135,9 @@ help:
 
 
 # This is how to link the objects files into the executable file.
-$(PROJ_NAME) : $(OBJ_FILES)
+$(PROJ_NAME) : $(OBJ_FILES) 
 	@echo ""
-	$(CXX) $(OBJ_FILES) $(LD_FLAGS) -o $(PROJ_NAME)
+	$(CXX) $(OBJ_FILES) D3Matrix4x4.o D3Vector.o D3ObjWithPos.o D3Int.o D3PosAndOrientation.o $(LD_FLAGS) -o $(PROJ_NAME)
 	@echo ""
 
 
