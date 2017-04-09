@@ -87,11 +87,13 @@ Created by Henrik Bjorkman 2014-11-09 using code and tutorials from internet (se
 #include "RsbString.h"
 #include "RsbInvItem.h"
 #include "GameUser.h"
-//#include "YukigassenWorld.h"
-//#include "YukigassenInventory.h"
-//#include "YukigassenAvatar.h"
-//#include "YukigassenRoom.h"
-//#include "YukigassenChunkRoom.h"
+#ifndef NO_YUKIGASSEN
+#include "YukigassenWorld.h"
+#include "YukigassenInventory.h"
+#include "YukigassenAvatar.h"
+#include "YukigassenRoom.h"
+#include "YukigassenChunkRoom.h"
+#endif
 #include "InputBuffer.h"
 #include "SoundLoaderPlayer.h"
 #include "SymMap.h"
@@ -146,7 +148,14 @@ int closeConnection();
 
 
 
+const D3Vector mainPos(2.0f, 0.5f, 10.0f); // We start with observer/camera 10 units above screen
+const D3Vector mainNose(0.0f, 0.0f,-1.0f); // We start with observer/camera looking from above the screen into it, nose points into screen, as you are probably sitting now reading this.
+const D3Vector mainHead(0.0f, 1.0f, 0.0f); // We start with observer/camera head upwards, as you are probably sitting now reading this.
 
+D3PosAndOrientation mainCameraPao(mainPos, mainNose, mainHead);
+D3PosAndOrientation mainSentPao(mainPos, mainNose, mainHead);
+bool mainFreeMoveMode=false;
+D3Vector aVelocity(0.0f, 0.0f, 0.0f);
 
 
 int mainCounter = 0x7fffffff; // Set this to zero to exit/quit
@@ -242,7 +251,6 @@ int prevAvatarAmmo=0x7FFFFFF;
 
 // Variables for status of keyboard
 // TODO Perhaps we should have a map for all keys (instead of just these below) so we can check if they are down or up.
-
 static bool altGr=false;
 //static bool shift=false;
 //static bool ctrl=false;
@@ -252,11 +260,12 @@ static bool leftCtrl=false;
 //static bool rightCtrl=false;
 static bool activateQuickAndDirtyTildeFix=false;
 
-
 const char* fontFileBig="font16x32.png";
 const char* fontFileSmall="font8x16.png";
 GameType gameType = unknownGame;
-GameUser *gameUser=NULL;
+
+int ourGameUserId=-1;
+
 
 void mainRender()
 {
@@ -281,17 +290,115 @@ void mainRender()
 	// If avatar is not in the topmost room we need to translate its position into that.
 	if (ourAvatarId<0)
 	{
+#ifndef NO_YUKIGASSEN
 		// This is just used to render the colored pyramid background during login etc, we don't have an avatar.
 
+		//const D3PosAndOrientation cameraPao(mainPos, mainNose, mainHead);
+		const D3PosAndOrientation cameraPao(mainCameraPao);
+
+		// Camera matrix
+		View       = glm::lookAt(
+									glm::vec3(cameraPao.pos.x,cameraPao.pos.y,cameraPao.pos.z),
+									glm::vec3(cameraPao.pos.x+cameraPao.nose.x,cameraPao.pos.y+cameraPao.nose.y,cameraPao.pos.z+cameraPao.nose.z), // This is a point in the room that we look at.
+									glm::vec3(cameraPao.head.x,cameraPao.head.y,cameraPao.head.z)  // Head is up (set to 0,-1,0 to look upside-down)
+		);
+
+
+
+		// Model matrix : an identity matrix (model will be at the origin)
+		glm::mat4 Model      = glm::mat4(1.0f); // This will not change anything so we can remove the "* Model" in the line below.
+
+
+
+		// Our ModelViewProjection : multiplication of our 3 matrices
+		MVP        = Projection * View * Model;
+
+
+
+
+
+		// What is GL_DEPTH_BUFFER_BIT in glClear? See: http://learnopengl.com/#!Advanced-OpenGL/Depth-testing
+		// This is how it is calculated: https://www.opengl.org/sdk/docs/man/html/gl_FragDepth.xhtml
+		// Now enable it:
+		glEnable(GL_DEPTH_TEST);
+		glDisable(GL_BLEND);
 
 		//rootDb->renderAll();
-
+#endif
 	}
 	else
 	{
 		// As soon as we are in a game and we have an avatar, this is used.
+#ifndef NO_YUKIGASSEN
 
+		assert(globalDb!=NULL);
+		const MirrorBase *avatarMb=globalDb->getObjectById(ourAvatarId);
+		D3PosAndOrientation renderPos(mainCameraPao);  // mainCameraPao is the avatars position given in the coordinates of the room avatar is in.
+		MirrorBase *renderMb=avatarMb->getParentObj(); // This is the room for which we the renderPos is relevant.
+
+		assert(avatarMb!=NULL);
+
+		// If the parent of current room is a room then we can render from there, but need to translate the coordinates so they match.
+		if (dynamic_cast<const YukigassenChunkRoom *>(renderMb->getParentObj())!=NULL)
+		{
+			const YukigassenRoom *renderYr=dynamic_cast<const YukigassenRoom *>(renderMb);
+			renderYr->pao.translatePaoToSuper(&renderPos);
+			renderMb = renderMb->getParentObj();
+		}
+
+		// We may want to step up even one more room. We could also have used a while loop here instead of doing it twice. But two steps up is enough.
+		if (dynamic_cast<const YukigassenChunkRoom *>(renderMb->getParentObj())!=NULL)
+		{
+			const YukigassenRoom *renderYr=dynamic_cast<const YukigassenRoom *>(renderMb);
+			renderYr->pao.translatePaoToSuper(&renderPos);
+			renderMb = renderMb->getParentObj();
+		}
+
+
+		// Camera matrix
+		View       = glm::lookAt(
+									glm::vec3(renderPos.pos.x,renderPos.pos.y,renderPos.pos.z),
+									glm::vec3(renderPos.pos.x+renderPos.nose.x,renderPos.pos.y+renderPos.nose.y,renderPos.pos.z+renderPos.nose.z), // This is a point in the room that we look at.
+									glm::vec3(renderPos.head.x,renderPos.head.y,renderPos.head.z)  // Head is up (set to 0,-1,0 to look upside-down)
+		);
+
+
+
+		// Model matrix : an identity matrix (model will be at the origin)
+		glm::mat4 Model      = glm::mat4(1.0f); // This will not change anything so we can remove the "* Model" in the line below.
+
+
+
+		// Our ModelViewProjection : multiplication of our 3 matrices
+		MVP        = Projection * View * Model;
+
+
+
+
+
+		// What is GL_DEPTH_BUFFER_BIT in glClear? See: http://learnopengl.com/#!Advanced-OpenGL/Depth-testing
+		// This is how it is calculated: https://www.opengl.org/sdk/docs/man/html/gl_FragDepth.xhtml
+
+		// This is a feature to avoid spending rendering resources on faces that are not visible anyway.
+		glCullFace(GL_BACK);
+		glEnable(GL_CULL_FACE);
+
+		glEnable(GL_DEPTH_TEST);
+		glDisable(GL_BLEND);
+
+
+		YukigassenChunkRoom *renderYcr=dynamic_cast<YukigassenChunkRoom *>(renderMb);
+		if (renderYcr!=NULL)
+		{
+			renderYcr->renderChunkRoom(&renderPos);
+		}
+		else if (renderMb!=NULL)
+		{
+			renderMb->renderAll();
+		}
+#endif
 	}
+
 
 	// In addition to the above 3D stuff we may also have some 2D to show in in the foreground.
 	// This is used for messages, statistics and some other indications such as when a player was hit.
@@ -331,8 +438,11 @@ void mainRender()
 // This is called from mainTick (and also from evaluateMessageFromServer).
 static void updateAvatarToServer()
 {
+#ifndef NO_YUKIGASSEN
 	WordWriter ww(512);
 	ww.writeWord("avatarPos");
+	mainCameraPao.writeSelf(&ww);
+	aVelocity.writeSelf(&ww);
 	ww.writeInt(serverChangedPositionCounter);
 
 	ww.writeInt(mirrorClientsSeqnr);
@@ -342,9 +452,11 @@ static void updateAvatarToServer()
 	mainSend(str);
 
 	++mirrorClientsSeqnr;
+	mainSentPao = mainCameraPao;
 
 
 	// Server must reply to the avatarPos message with an avatarAck message. Or it might be with an mirrorUpdated message?
+#endif
 }
 
 
@@ -352,7 +464,220 @@ static void updateAvatarToServer()
 
 const int maxDeltaTime = 100; // max stepping of time is 100 ms
 
+#ifndef NO_YUKIGASSEN
 
+// The avatar position is updated locally to avoid the lag that updating via server would give
+// TODO server side check that client does not make illegal moves.
+static void localAvatarMovement(YukigassenAvatar *ya, const float deltaTime)
+{
+	const float margin = 0.2f;
+
+	YukigassenRoom *ybr = dynamic_cast<YukigassenRoom*>(ya->getParentObj());
+	assert(ybr!=NULL);
+
+	D3Vector currentPos(mainCameraPao.pos); // Remember current position if move is not possible
+	D3PosAndOrientation zPao(mainCameraPao); // Will later be set to the direction player is looking locked in the Z plane
+
+
+	float bodyLength=YukigassenAvatar::noseToFeetLength;
+	if (mainCrouch)
+	{
+		bodyLength*=0.5;
+	}
+
+	// To determine if avatar is on ground or in air we need to know how far it is to ground..
+	const float distToGround = ybr->calcDistToGround(&currentPos, bodyLength*1.1f);
+
+	// The server has not changed avatar position, it is OK for client to move it.
+	if (groundContact || ((distToGround<bodyLength) && (aVelocity.z>=0.0f)))
+	{
+		// This avatar is in contact with the ground
+
+		// TODO: We assume positive Z axis is down here. We should use the roomAcceleration vector in avatar parent room.
+
+
+		// Get desired direction in the Z plain
+		/*if ((zPao.nose.z>=0.999999f) || (zPao.nose.z<=-0.999999f))
+		{
+			zPao.nose.set(1.0f, 0.0f, 0.0f);
+		}*/
+
+		D3Vector zRight(zPao.nose, zPao.head);
+		if (zPao.head.z<0)
+		{
+			zPao.head.set(0.0f, 0.0f, -1.0f);
+			zRight.cross(zPao.nose, zPao.head);
+			zPao.nose.cross(zPao.head, zRight);
+		}
+
+		// ground is within reach, reset velocity to zero and start over
+		aVelocity.set(0.0f,0.0f,0.0f);
+
+		float groundSpeed=(ya->avatarStateMs)?50.0f:25.0f;
+
+		if (mainCrouch)
+		{
+			groundSpeed*=0.666667;
+		}
+
+
+
+		const float a=distToGround-bodyLength;
+
+		if (a<0)
+		{
+			// Feet is under ground, climb up
+			float m = -(deltaTime*groundSpeed*0.2f);
+			if (a<m)
+			{
+				//printf("a %f, m %f\n", a, m);
+				mainCameraPao.pos.z += m;
+			}
+			else
+			{
+				mainCameraPao.pos.z += a;
+			}
+
+			// Check that it is possible to climb up (nothing in the way)
+			if (ybr!=NULL)
+			{
+				if (ybr->isInsideBlockMargin(&(mainCameraPao.pos), margin))
+				{
+					const bool currentIsInsideBlock=ybr->isInsideBlockMargin(&currentPos, margin);
+
+					//printf("mainTick: rise inside\n");
+					if (currentIsInsideBlock==false)
+					{
+						// rising up was not possible
+						//printf("mainTick: rise was reverted\n");
+						mainCameraPao.pos.set(currentPos);
+						aVelocity.set(0.0f,0.0f,0.0f);
+						if (mainSpeedUp>0)
+						{
+							aVelocity.add(mainSpeedUp*20.0f, zPao.head);
+						}
+
+					}
+				}
+			}
+		}
+
+
+
+
+
+
+
+		if (mainSpeedUp>0)
+		{
+			// jump
+			aVelocity.add(mainSpeedUp*20.0f, zPao.head);
+		}
+
+
+
+		if ((mainSpeedForward!=0) && (mainSpeedRight!=0))
+		{
+			// forward and left/right
+			aVelocity.add(mainSpeedForward*groundSpeed*0.7f, zPao.nose);
+			aVelocity.add(mainSpeedRight*groundSpeed*0.7f, zRight);
+
+		}
+		else if (mainSpeedForward!=0)
+		{
+			// forward
+			aVelocity.add(mainSpeedForward*groundSpeed, zPao.nose);
+
+		}
+		else if (mainSpeedRight!=0)
+		{
+			// move right
+			aVelocity.add(mainSpeedRight*groundSpeed, zRight);
+
+		}
+
+		// When avatar is in contact with ground it shall be standing up, feet down head up.
+		mainCameraPao.nose.cross(mainCameraPao.head, zRight);
+		mainCameraPao.head.cross(zRight, mainCameraPao.nose);
+		mainCameraPao.nose.normalize();
+		mainCameraPao.head.normalize();
+
+		//pao.head=zPao.head;
+		//pao.nose=zPao.nose;
+
+		mainCameraPao.pos.add(deltaTime, aVelocity);
+
+		//ya->limitPos(pao.pos);
+
+
+		/*if (mainSpeedUp==0)
+		{
+			aVelocity.set(0.0f,0.0f,0.0f);
+		}*/
+
+		groundContact=false;
+	}
+	else
+	{
+		// In air, no contact with ground, avatar is ballistic.
+
+		const YukigassenRoom *pyr=ybr;
+
+		if (pyr->roomAcceleration.absLength()<=0.01)
+		{
+			// micro gravity
+			D3Vector zRight(zPao.nose, zPao.head);
+
+			if  (mainSpeedUp!=0)
+			{
+				aVelocity.add(mainSpeedUp*1.0f, zPao.nose);
+			}
+
+			if (mainSpeedForward!=0)
+			{
+				// forward
+				aVelocity.add(mainSpeedForward*1.0f, zPao.nose);
+
+			}
+			if (mainSpeedRight!=0)
+			{
+				// move right
+				aVelocity.add(mainSpeedRight*1.0f, zRight);
+			}
+
+			// TODO Normalize aVelocity so that it is not faster to go diagonally
+
+		}
+		else
+		{
+			aVelocity.add(deltaTime, pyr->roomAcceleration);
+		}
+
+		mainCameraPao.pos.add(deltaTime, aVelocity);
+	}
+
+	// Check that it is possible to move (nothing in the way)
+	if (ybr!=NULL)
+	{
+		// Tells if the avatar would collide with blocks in the room that it is in.
+		if (ybr->isInsideBlockMargin(&(mainCameraPao.pos), margin))
+		{
+			// Check that current position is not already blocked since then its no use going back to there.
+			const bool currentIsInsideBlock=ybr->isInsideBlockMargin(&currentPos, margin);
+
+			//printf("mainTick: inside\n");
+			if (currentIsInsideBlock==false)
+			{
+				// Move was not possible
+				//printf("mainTick: move was reverted\n");
+				mainCameraPao.pos.set(currentPos);
+				aVelocity.set(0.0f,0.0f,0.0f);
+				groundContact=true;
+			}
+		}
+	}
+}
+#endif
 
 // This shall be called periodically (such as 60 times per second or so) from mainPollAndTick or from main.
 void mainTick()
@@ -378,19 +703,108 @@ void mainTick()
 	}
 	mainTime += deltaTimeMs;
 
-	//const float deltaTime = deltaTimeMs*0.001f;
+#ifndef NO_YUKIGASSEN
+	const float deltaTime = deltaTimeMs*0.001f;
+#endif
 
-
+	if ((mainFreeMoveMode) || (ourAvatarId<0))
 	{
+		// Move camera without avatar
+		mainCameraPao.forward(mainSpeedForward*deltaTimeMs*0.01);
+		mainCameraPao.right(mainSpeedRight*deltaTimeMs*0.01);
+		mainCameraPao.up(mainSpeedUp*deltaTimeMs*0.01);
+	}
+	else
+	{
+#ifndef NO_YUKIGASSEN
 		// Calculate avatar movement
 
-		//MirrorBase *avatarMb=globalDb->getObjectById(ourAvatarId);
+		MirrorBase *avatarMb=globalDb->getObjectById(ourAvatarId);
+		YukigassenAvatar *ya=dynamic_cast<YukigassenAvatar *>(avatarMb);
+		//ya->limitPos(pao.pos);
+
+
+		// pao can be looking up, but running is along the plane and jump is perpendicular to the plane. The plane is perpendicular to gravity/acceleration.
 
 
 
 
 
 
+		// Did server change avatar position?
+		if (serverChangedPositionCounter!=ya->serverChangedPositionCounter)
+		{
+			// This means that the server have changed to position in a way that we the client must follow. It can be teleporting or moving from one room to another.
+			// We shall take the position the server say. We could continue moving after that but for now we just take the position and stay there.
+			printf("serverChangedPositionCounter %d\n", serverChangedPositionCounter);
+			mainCameraPao.set(ya->pao);
+			//aVelocity.set(0.0f,0.0f,0.0f); // TODO we shall use velocity from server also.
+			aVelocity.set(ya->objectVelocity);
+			serverChangedPositionCounter=ya->serverChangedPositionCounter;
+		}
+		else
+		{
+			// Server did not change the avatar position, we can calculate it locally.
+			localAvatarMovement(ya, deltaTime);
+		}
+
+
+		// This checks if we shall show the player hit "snow screen". An overlay 2D texture.
+		if (ya->avatarStateMs)
+		{
+			// player has been hit.
+			if (hitIndicationIsOn==false)
+			{
+				// hit indication is off so it needs to be turned on.
+				hudScreenBox->setImage(0,0, 256, 256);
+				textMessagesPage->addText("You where hit!");
+				// TODO: I want a sound also but program crashes when I use this.
+				/*
+				if (beepSound!=NULL)
+				{
+					beepSound->load_Sound("boom.ogg");
+					beepSound->play_Sound();
+
+				}
+				*/
+				//SoundLoader::playSoundFile("boom.ogg");
+
+				hitIndicationIsOn=true;
+			}
+		}
+		else
+		{
+			// player is not hit
+			if (hitIndicationIsOn==true)
+			{
+				// hit indication is on so it shall be turned off.
+				hudScreenBox->clearText();
+				textMessagesPage->addText("go");
+				hitIndicationIsOn=false;
+			}
+		}
+
+		// We have some 2D ammo indicator. This calculates its value.
+		const int a=ya->avatarAmmo/1000;
+		if (a!=prevAvatarAmmo)
+		{
+			// Remake the text only if value is changed.
+			if (a>0)
+			{
+				char tmpStr[80];
+				sprintf(tmpStr, "%d", a);
+				amoTextBox->setText(tmpStr);
+			}
+			else
+			{
+				amoTextBox->clearText();
+			}
+			prevAvatarAmmo=a;
+		}
+#endif
+
+		MirrorBase *mb=globalDb->getObjectById(ourGameUserId);
+		GameUser *gameUser=dynamic_cast<GameUser *>(mb);
 
 		// Check Messages to the player
 		// Messages are stored in a round buffer. Check here if there are any new messages.
@@ -517,8 +931,30 @@ void mainTick()
 		}
 
 
-
-
+#ifndef NO_YUKIGASSEN
+		// Send position update to server.
+		// But not to often. Not more often than once per 100 ms.
+		const int timeDiffLastSending=currTime-timeLastSending;
+		if (timeDiffLastSending>=100)
+		{
+			// we may not send an infinite number of messages to server without hearing something from server.
+			const int seqnr = mirrorClientsSeqnr - mirrorAckedClientsSeqnr;
+			if (seqnr<4)
+			{
+				// no need to send unless position has changed
+				if (!mainCameraPao.equals(mainSentPao))
+				{
+					updateAvatarToServer();
+					timeLastSending = currTime;
+				}
+			}
+			else
+			{
+				// We must hold back sending avatar position updates for a while, server is not ready.
+				//printf("mirrorClientsSeqnr %d %d\n", mirrorClientsSeqnr, mirrorAckedClientsSeqnr);
+			}
+		}
+#endif
 
 	} // if ((mainFreeMoveMode) || (ourAvatarId<0))
 
@@ -555,6 +991,10 @@ static void cleanupGame()
 	//mainNose.set(0.0f, 0.0f,-1.0f); // We start with observer/camera looking from above the screen into it, nose points into screen, as you are probably sitting now reading this.
 	//mainHead.set(0.0f, 1.0f, 0.0f); // We start with observer/camera head upwards, as you are probably sitting now reading this.
 
+	mainCameraPao.set(mainPos, mainNose, mainHead);
+	//sentPao.set(mainPos, mainNose, mainHead);
+	mainFreeMoveMode=false;
+	aVelocity.set(0.0f, 0.0f, 0.0f);
 
 	//mainCounter = 0x7fffffff; // Set this to zero to exit/quit
 	mainSpeedForward = 0.0f;
@@ -872,6 +1312,12 @@ static int processKeyDownEvent(int key)
 				case SymMap::downOne:
 					localAvatar->scrollDown();
 					break;
+				case SymMap::leftOne:
+					mainCameraPao.yaw_right(-0.01f);
+					break;
+				case SymMap::rightOne:
+					mainCameraPao.yaw_right(0.01f);
+					break;
 				case SymMap::pageUp:
 					printf("SymMap: pg up event\n");
 					localAvatar->scrollUp();
@@ -902,6 +1348,9 @@ static int processKeyDownEvent(int key)
 				case SymMap::moveLeft:
 					mainSpeedRight = -0.1f;
 					break;
+				case SymMap::rollRight_deprecated:
+					mainCameraPao.roll_right(0.01f);
+					break;
 				case SymMap::moveRight:
 					mainSpeedRight = 0.1f;
 					break;
@@ -919,8 +1368,23 @@ static int processKeyDownEvent(int key)
 				case SymMap::moveBackwards:
 					mainSpeedForward = -0.1f;
 					break;
+				case SymMap::rollLeft_deprecated:
+					mainCameraPao.roll_right(-0.01f);
+					break;
+				case SymMap::yawLeft_deprecated:
+					mainCameraPao.yaw_right(-0.01f);
+					break;
+				case SymMap::pitchUp_deprecated:
+					mainCameraPao.pitch_up(0.01f);
+					break;
+				case SymMap::pitchDown_deprecated:
+					mainCameraPao.pitch_up(-0.01f);
+					break;
 				case SymMap::moveForward:
 					mainSpeedForward = 0.1f;
+					break;
+				case SymMap::yawRight_deprecated:
+					mainCameraPao.yaw_right(0.01f);
 					break;
 				case SymMap::clearText:
 					textMessagesPage->clearText();
@@ -928,8 +1392,61 @@ static int processKeyDownEvent(int key)
 				case SymMap::invScreen:
 				{
 					textInventoryPage->addText("inventory", NULL);
+#ifdef NO_YUYKIGASSEN
 
+					assert(globalDb!=NULL);
+					MirrorBase *tmpMb=globalDb->getObjectById(ourAvatarId);
+					YukigassenAvatar *ya=dynamic_cast<YukigassenAvatar*>(tmpMb);
+					if (ya!=NULL)
+					{
+						const YukigassenInventory *inv=ya->getInv();
+						if (inv!=NULL)
+						{
+							size_t c=inv->childVector.capacity();
+							for (size_t i=0; i<c; ++i)
+							{
+								MirrorBase *mb = inv->childVector[i];
+								if (mb!=NULL)
+								{
+									char indexStr[20]={0};
+									sprintf(indexStr, "%d", mb->getIndex());
+									assert(indexStr[sizeof(indexStr)-1]==0);
+
+									RsbInvItem *rs=dynamic_cast<RsbInvItem*>(mb);
+									if (rs!=NULL)
+									{
+										wchar_t tStr[256*sizeof(wchar_t)]={0};
+										swprintf(tStr, sizeof(tStr), L"%03lld %.120ls", rs->getNumberOf(), rs->getValueW());
+
+										assert(tStr[SIZEOF_ARRAY(tStr)-1]==0);
+										textInventoryPage->addTextW(tStr, indexStr);
+									}
+									else
+									{
+										char tStr[160]={0};
+										sprintf(tStr, "%03lld %.120s", 1LL, mb->getName());
+										assert(tStr[SIZEOF_ARRAY(tStr)-1]==0);
+										textInventoryPage->addText(tStr, indexStr);
+
+									}
+								}
+							}
+						}
+						else
+						{
+							textMessagesPage->addText("your inventory is empty", NULL);
+						}
+					}
+					else
+					{
+						textMessagesPage->addText("avatar not found", NULL);
+					}
+
+#else
 					textInventoryPage->addText("not implemented yet", NULL);
+#endif
+
+					// TODO push local avatar location
 
 					localAvatar=textInventoryPage;
 					mouseRelease();
@@ -1114,7 +1631,7 @@ static int processKeyUpEvent(int key)
 // more than one hardware key can be be needed to generate one character. Holding down one key (or a combination of keys) can generate more than one character.
 static int processKeyPress(wchar_t code)
 {
-	//activateQuickAndDirtyTildeFix=false;
+	activateQuickAndDirtyTildeFix=false;
 
 	//printf("processKeyPress %d\n", code);
 	switch (textInputBuffer->GetMode())
@@ -1171,12 +1688,14 @@ static void processKeysPressed(const char *str)
 
 static int processMouseMoveXEvent(int x)
 {
+	mainCameraPao.yaw_right(x*0.001f);
 
 	return 0;
 }
 
 static int processMouseMoveYEvent(int y)
 {
+	mainCameraPao.pitch_up(y*-0.001f);
 
 	return 0;
 }
@@ -1273,11 +1792,15 @@ static bool autoAnswer(const char *styleTag)
 			{
 				// See method PlayerConnectionThread.serverFactory in server for available games.
 				// List here all games that this client can handle (it can be more than one separated by space, inside the quotes)
-#ifdef EMPIRE_CLIENT
-				mainSend("\"yukigassen lobby empire\"");
-#else
-				mainSend("\"yukigassen lobby\"");
+				mainSend("\""
+#ifndef NO_YUKIGASSEN
+				"yukigassen "
 #endif
+				"lobby "
+#ifdef EMPIRE_CLIENT
+				"empire "
+#endif
+				"\"");
 				textInputBuffer->inputBufferClear();
 				return true;
 			}
@@ -1547,7 +2070,7 @@ static bool evaluateCommandFromServer(WordReader *wr, const char *cmd)
 				mirrorAckedClientsSeqnr=wr->readInt();
 				return true;
 			}
-			else if (strcmp(cmd, "avatarId")==0)
+			else if (strcmp(cmd, "avatarId")==0) // deprecated, server shall send gameUserId instead
 			{
 				// Server send this to tell us the ID of this players avatar
 				const char *avatarIdStr=wr->readToken();
@@ -1555,13 +2078,14 @@ static bool evaluateCommandFromServer(WordReader *wr, const char *cmd)
 				ourAvatarId=atoi(avatarIdStr);
 
 				// Now it should be possible to set our position
-				/*MirrorBase *mb=globalDb->getObjectById(ourAvatarId);
+#ifndef NO_YUKIGASSEN
+				MirrorBase *mb=globalDb->getObjectById(ourAvatarId);
 				YukigassenAvatar *ya=dynamic_cast<YukigassenAvatar *>(mb);
 				if (ya!=NULL)
 				{
 					mainCameraPao.set(ya->pao);
 				}
-				*/
+#endif
 				updateAvatarToServer();
 
 				return true;
@@ -1594,6 +2118,38 @@ static bool evaluateCommandFromServer(WordReader *wr, const char *cmd)
 						}
 					}
 				}
+				return true;
+			}
+			break;
+		case 'g':
+			if (strcmp(cmd, "gameUserId")==0)
+			{
+				// Server send this to tell us the ID of this players avatar
+				const char *gameUserIdStr=wr->readToken();
+				printf("our game user ID: %s\n", gameUserIdStr);
+				ourGameUserId=atoi(gameUserIdStr);
+
+				// Now it should be possible to set our position
+				MirrorBase *mb=globalDb->getObjectById(ourGameUserId);
+
+				GameUser *gu=dynamic_cast<GameUser *>(mb);
+				if (gu==NULL)
+				{
+					printf("That was not a game user ~%d",ourGameUserId);
+					ourGameUserId=-1;
+				}
+
+				ourAvatarId=gu->avatarId;
+#ifdef YUKIGASSEN
+				YukigassenAvatar *ya=dynamic_cast<YukigassenAvatar *>(mb);
+				if (ya!=NULL)
+				{
+					// avatar is a 3d capable avatar
+					mainCameraPao.set(ya->pao);
+				}
+#endif
+				updateAvatarToServer();
+
 				return true;
 			}
 			break;
@@ -2805,7 +3361,10 @@ void mainCleanup()
 	DrawText::quit();
 	imageLoaderQuit();
 
-	//YukigassenTexturedRoomCleanup();
+#ifndef NO_YUKIGASSEN
+	YukigassenTexturedRoomCleanup();
+#endif
+
 	//TexCubeCleanup();
 
 	glDeleteProgram(quad2dProgramId);

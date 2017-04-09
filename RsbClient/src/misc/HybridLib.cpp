@@ -18,8 +18,9 @@
 #endif
 #include "HybridLib.h"
 
-
+// TODO These variables dont need to be in this file.
 int ourAvatarId=-1; // we need to know which object is our avatar so we can avoid rendering it (if we did we would only see the avatar from inside)
+
 int mainLog = 0;
 
 
