@@ -21,18 +21,18 @@ function EmpWorld(world, parent, emType, arg)
 }
 
 
-EmpWorld.prototype.readSelf=function(arg)
+EmpWorld.prototype.readSelf=function(wr)
 {
-	var n = EmpBase.prototype.readSelf.call(this, arg);
+	EmpBase.prototype.readSelf.call(this, wr);
 
 
 	//this.gameTime=arg[6];
-	this.gameSpeed=arg[10];
+	this.gameSpeed=wr.getAbsArg(10);
 	
 	this.mirrorDb.empireWorld=this;
 
 	//this.info=arg.slice(3);
-	return arg.length;
+
 }
 
 EmpWorld.prototype.selfToString=function()

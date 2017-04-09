@@ -19,7 +19,7 @@ EmpWinTextinput.prototype.defineDiv=function(divSize)
 	var newPage='';
 
 	// The central area of the page	
-	newPage+='<div style="width:'+divSize.x+'px; height:'+divSize.y+'px; overflow-x: scroll; overflow-y: scroll;">';
+	newPage+='<div id="terrainDiv" style="width:'+divSize.x+'px; height:'+divSize.y+'px; overflow-x: scroll; overflow-y: scroll; float:right;">';
 
 	if (!rootDiv.mobileMode)
 	{	

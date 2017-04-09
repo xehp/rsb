@@ -12,34 +12,32 @@ function DivTerminal(parentWin)
 {
 	DivBase.call(this, parentWin); // call super constructor
 	this.count=null;
-	this.text='';
-	this.textElement=null;
+	this.prevText='';
+	this.element=null;
 	
 	this.changeConter=0;
 	this.previousChangeConter=0;
-	//this.elementName="consoleArea";
 }
 
 DivTerminal.prototype.defineDiv=function(divSize)
 {
 	var newPage='';
 
-	// The central area of the page	
-	newPage+='<div style="width:'+divSize.x+'px; height:'+divSize.y+'px; overflow-x: scroll; overflow-y: scroll;">';
+	// This div is intended for the central area of the page	
+	newPage+='<div id="terrainDiv" style="width:'+divSize.x+'px; height:'+divSize.y+'px; overflow-x: scroll; overflow-y: scroll; float:right;">';
 
 	
-	// The console 
-	//newPage+='<div>';
-	newPage+='<textarea id="consoleArea" class=emptext rows=24 readOnly="yes"></textarea><br/>'; // This creates the console text area
+	// The console text output area (multiple lines where resulting text is shown).
+	newPage+='<textarea id="consoleArea" class=emptext rows=' + (divSize.y/16 - 2) + ' readOnly="yes"></textarea><br/>'; // This creates the console text area
 	
 	if (!this.parentWin.mobileMode)
 	{
+		// The console text input area (the single line where text is entered).
 		newPage+='<input type="text" id="inputText" size="88" onchange="rootDiv.onInputText(\'inputText\')"><br/>'; // This is where text can be written by user
 		newPage+='<input type="button" value=enter onclick="rootDiv.onInputText(\'inputText\')">';
 		newPage+='<input type="button" value=cancel onclick="rootDiv.mapCanvasCancel()">';
-		newPage+='<input type="button" value=back onclick="rootDiv.DivTerminal.back();"><br>';
+		newPage+='<input type="button" value=back onclick="rootDiv.subWin.back();"><br>';
 	}
-	//newPage+='</div>';
 
 
 	
@@ -53,23 +51,22 @@ DivTerminal.prototype.defineDiv=function(divSize)
 
 DivTerminal.prototype.addEventListenersDiv=function()
 {
-	this.textElement = document.getElementById("consoleArea");
-
-	this.textElement.value+=this.text;
+	this.element = document.getElementById("consoleArea");
+	this.textBoxClear();
 }
 
 DivTerminal.prototype.drawDiv=function()
 {
-	this.textElement = document.getElementById("consoleArea");
+	this.element = document.getElementById("consoleArea");
 
 	if (this.previousChangeConter!=this.changeConter)
 	{
-		var e = this.textElement;
+		var e = this.element;
 		if (e == null)
 		{
 			// Did we forget to call addEventListenersDiv? Will make a quick and dirty here instead of debugging.
-			this.textElement = document.getElementById("consoleArea");
-			e = this.textElement;
+			this.element = document.getElementById("consoleArea");
+			e = this.element;
 			if (e == null)
 			{
 				return;
@@ -91,33 +88,39 @@ DivTerminal.prototype.back=function()
 {
 	console.log("back");
 
-	this.text=this.textElement.value+"---\n";
-	this.textElement=null;
-	rootDiv.mapSetShowState(0)
+	this.prevText=this.element.value+"---\n";
+	this.element=null;
+	rootDiv.backToPreviousSubWin();
 }
 
-DivTerminal.prototype.textBoxAppend=function(msg)
+DivTerminal.prototype.addText=function(msg)
 {
-	this.textElement = document.getElementById("consoleArea");
+	//this.element = document.getElementById("consoleArea");
 
-	var str=hlibRemoveQuotes(msg)+"\n";
+	//var str=hlibRemoveQuotes(msg)+"\n";
 
-	console.log("textBoxAppend: '"+str+"'");
-
-	if (this.text!=null)
+	if (this.prevText!=null)
 	{
-		this.text += str;
+		this.prevText += msg;
 	}
 
-	if (this.textElement!=null)
+	var e = this.element;
+	if (e!=null)
 	{
-		var e = this.textElement;
-		e.value+=str;
+		e.value+=msg;
 		e.scrollTop = e.scrollHeight;
-		console.log("scrollHeight: "+e.scrollHeight);
+		//console.log("scrollHeight: "+e.scrollHeight);
 	}
 
 	this.changeConter++;
-	
 }
 
+
+// not just clear, we add some old text also if any
+DivTerminal.prototype.textBoxClear=function()
+{
+	var e = this.element;
+
+	e.value=this.prevText; 
+	e.scrollTop = e.scrollHeight;
+}

@@ -12,23 +12,22 @@ function EmpUnitType(world, parent, emType, arg)
 	EmpBase.call(this, world, parent, emType, arg); // call super constructor
 }
 
-EmpUnitType.prototype.readSelf=function(arg)
+EmpUnitType.prototype.readSelf=function(wr)
 {
-	var n = EmpBase.prototype.readSelf.call(this, arg);
+	EmpBase.prototype.readSelf.call(this, wr);
 
 	
 
-	this.unitMass=parseInt(arg[n+6]);
-	this.possibleOrders=hlibRemoveQuotes(arg[n+19]);
-	this.possibleBuilds=hlibRemoveQuotes(arg[n+20]);
+	this.unitMass=parseInt(wr.getRel(6));
+	this.possibleOrders=hlibRemoveQuotes(wr.getRel(21));
+	this.possibleBuilds=hlibRemoveQuotes(wr.getRel(22));
+	this.possibleAssemblies=hlibRemoveQuotes(wr.getRel(25));
 
 	//this.info=arg.slice(3);
 
 
 	this.empImg=new EmpImg(this.objName);
 
-
-	return arg.length;
 }
 
 
@@ -38,6 +37,7 @@ EmpUnitType.prototype.selfToString=function()
 
 	str+=", possibleOrders="+this.possibleOrders;
 	str+=", possibleBuilds="+this.possibleBuilds;
+	str+=", possibleAssemblies="+this.possibleAssemblies;
 	
 	var n=this.getNChildObjects();
 	if (n>0)

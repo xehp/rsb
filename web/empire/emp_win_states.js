@@ -3,7 +3,7 @@
 // Created 2014-12-31 by Henrik Bjorkman www.eit.se/hb
 
 
-EmpWinStates.prototype = Object.create(DivBase.prototype);
+EmpWinStates.prototype = Object.create(DivMouse.prototype);
 EmpWinStates.prototype.constructor = EmpWinStates;
 
 
@@ -11,7 +11,7 @@ EmpWinStates.prototype.constructor = EmpWinStates;
 
 function EmpWinStates(parentWin)
 {
-	DivBase.call(this, parentWin); // call super constructor
+	DivMouse.call(this, parentWin); // call super constructor
 
 	this.parentWin=parentWin;
 }
@@ -20,7 +20,7 @@ EmpWinStates.prototype.defineDiv=function(divSize)
 {
 	var newPage='';
 
-	newPage+='<div style="width:'+divSize.x+'px; height:'+divSize.y+'px; overflow-x: scroll; overflow-y: scroll;">';
+	newPage+='<div id="terrainDiv" style="width:'+divSize.x+'px; height:'+divSize.y+'px; overflow-x: scroll; overflow-y: scroll; float:right;">';
 
 	// The central area of the page	
 	newPage+='<div style="width:400px;height:460px;float:left;">';
@@ -35,7 +35,7 @@ EmpWinStates.prototype.defineDiv=function(divSize)
 
 EmpWinStates.prototype.addEventListenersDiv=function()
 {
-	DivBase.prototype.addEventListenersDiv.call(this, "myCanvas");
+	DivMouse.prototype.addEventListenersDiv.call(this, "myCanvas");
 }
 
 
@@ -135,14 +135,27 @@ EmpWinStates.prototype.drawDiv=function()
 
 EmpWinStates.prototype.click=function(mouseUpPos)
 {
-	console.log("not implemented yet");
-	//rootDiv.mapSetShowState(0);
-
 	var n = Math.floor(mouseUpPos.y / rootDiv.mapSectorHeight);
 	
-	console.log("EmpWinStates.click, x="+mouseUpPos.x+", y="+mouseUpPos.y+", n="+n);
+	var esl=rootDiv.empDb.getEmpireWorld().getEmpireStatesList();
+	var s1=esl.children[rootDiv.mapNation];
 	
-	doSend("textMsg 'stateOrder "+n+"'");
+	console.log("EmpWinStates.click, x="+mouseUpPos.x+", y="+mouseUpPos.y+", n="+n+", relation="+ this.relation(s1, n)=="hostile");
+	
+	// TODO we should open a menu for relations with this state.
+	// From that menu it should be possible to change relations and send messages.
+	// But for now we just toggle the hostility flag
+	//doSend("textMsg 'stateOrder "+n+"'");
+	
+	
+	if (this.relation(s1, n)=="hostile")
+	{
+		doSend("consoleInput 'rmEnemy "+n+"'");
+	}
+	else
+	{
+		doSend("consoleInput 'addEnemy "+n+"'");
+	}
 }
 
 

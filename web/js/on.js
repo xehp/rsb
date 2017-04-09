@@ -2,14 +2,16 @@
 // Created 2014-03-14 by Henrik Bjorkman www.eit.se/hb
 
 //var pingTimer=null;
+//var clientIdx=null;
+//var clientPin=null;
 
 function onTestWebSocket(wsUrl)
 {
 
-        // open the web socket
+	// open the web socket
 	websocket = new WebSocket(wsUrl);
 
-        // This registers callbacks for web socket events
+	// This registers callbacks for web socket events
 	websocket.onopen = function(evt) { onOpen(evt) };
 	websocket.onclose = function(evt) { onClose(evt) };
 	websocket.onmessage = function(evt) { onMessage(evt) };
@@ -22,7 +24,7 @@ function onOpen(evt)
 {
 	console.log("CONNECTED: "+ Date());
 
-        // Tell sever we wish to use web game protocol.
+	// Tell sever we wish to use web game protocol.
 	doSend("rsb_web_game");
 }
 
@@ -53,7 +55,7 @@ function onMessage(evt)
 	var cmd=arg[0];
 	var reply='';
 
-	//console.log("onMessage: " + evt.data); 
+	console.log("onMessage: " + evt.data); 
 
 	/*console.log('<span style="color: blue;">arg.length: "' + arg.length +'"</span>');
 	for (i=0; i<arg.length; i++)
@@ -68,88 +70,98 @@ function onMessage(evt)
 
 	// Here we check what server want client program to do.
 	// Commands sent by ConnectionThread need to be interpreted here.
-	if (cmd=="query")
+	if (cmd=="qp")
 	{
+		typeOfQuestion=arg[1];
+		tag=arg[2];
+		defaultText=arg[3];
+
+		console.log('cmd='+ cmd+ ', tag=' + tag + ', defaultText=' + defaultText);
+
+
 		// Server will expect the number of the button as reply.
-		if (arg[3]=="buttonPrompt")
+		if (typeOfQuestion=="buttonPrompt")
 		{
 			// Format for this querry is:
-			// query <tag> <heading text> buttonPrompt <number of buttons> "<button names>" ...
+			// query buttonPrompt <tag> <heading text> <number of buttons> "<button names>" ...
 			// vi ska fråga efter "button" men tills vidare...
 
 			// auto answer some questions
-			if (arg[1]=="2d_or_3d_support")
+			if (tag=="2d_or_3d_support") // This is deprecated, replaced by "game_support"
 			{
 				doSend("2d");
 			}
 			else
 			{
-
-			        var alt='buttons: ';
+				var alt='buttons: ';
 				var n=arg[4];
 				var i=0;
-			        for (i=0;i<n;i++)
+				for (i=0;i<n;i++)
 				{
 					// console.log('button '+n+' '+i+' '+arg[5+i]);
 					alt=alt+'\n '+i+' '+arg[5+i];
 				}
 
-				console.log('doButtonQuery ' + arg[2] + ' ' + n);
-
 				// Commented out here is one way to do it. But it don't look good.
 				//reply=prompt(arg[2]+'\n'+alt, 'reply with button number here (not name)');
 				//doSend(reply);	
 		
-				doButtonQuery(arg[2], arg.slice(5,4+n));
+				doButtonQuery(defaultText, arg.slice(5,4+n));
 			}
 
 		}
-		else if (arg[3]=="promptString")
+		else if (typeOfQuestion=="promptString")
 		{
 			// Format for this querry is:
 			// query <tag> <heading> promptString
 
 			// Commented out here is one way to do it. But it don't look good.
-	        	//reply=prompt(arg[2], 'reply with a string here');
+				//reply=prompt(arg[2], 'reply with a string here');
 			//reply='"'+reply+'"';
 			//doSend(reply);
 
-			if (arg[1]=="enter_player_pw")
+			if (tag=="enter_player_pw")
 			{
 				// Format for this querry is:
 				// query enter_player_pw <heading> promptString
 
-				doPwQuery(arg[2]);
+				doPwQuery(defaultText);
 			}
-			else if (arg[1]=="enter_player_name")
+			else if (tag=="enter_player_name")
 			{
-				doNameQuery(arg[2]);
+				doNameQuery(defaultText);
+			}
+			else if (tag=="game_support")
+			{
+				// See method PlayerConnectionThread.serverFactory in server for available games.
+				// List here all games that this client can handle (it can be more than one separated by space, inside the quotes)
+				doSend('"empire flame lobby"'); 
 			}
 			else
 			{
-				doTextQuery(arg[2]);
+				doTextQuery(defaultText);
 			}
 		}
-		else if (arg[3]=="promptInt")
+		else if (typeOfQuestion=="promptInt")
 		{
 			// Format for this querry is:
 			// query <tag> <heading> promptString
 
 			// Commented out here is one way to do it. But it don't look good.
-	        	//reply=prompt(arg[2], 'reply with a string here');
+				//reply=prompt(defaultText, 'reply with a string here');
 			//reply='"'+reply+'"';
 			//doSend(reply);
 
-			doIntQuery(arg[2]);
+			doIntQuery(defaultText);
 		}
-		else if (arg[3]=="listPrompt")
+		else if (typeOfQuestion=="listPrompt")
 		{
-			console.log("listPrompt??? "+ arg[2]);
-			doListQuery(arg[2]);
+			console.log("listPrompt??? "+ defaultText);
+			doListQuery(defaultText);
 		}
 		else
  		{
-	        	reply=prompt(arg[2]+' '+arg[1], '');	
+				reply=prompt(defaultText+' '+tag, '');	
 			doSend(reply);	
 		}
 	}
@@ -165,7 +177,7 @@ function onMessage(evt)
 	else if (cmd==expectedServer)
 	{
 		// This is the identification message from RSB server.
-      		// It will expect client to identify itself. 
+		// It will expect client to identify itself. 
 		// This is done to avoid connecting with someting compleately different.
 		doSend(clientVersion);
 	}
@@ -178,10 +190,6 @@ function onMessage(evt)
 	{
 		chatRoomOpen('chat room');
 	}
-	else if (cmd=="openCityPvp")
-	{
-		cityPvpOpen('CityPvp');
-	}
 	else if (cmd=="listClear")
 	{
 		console.log('listClear');
@@ -192,33 +200,49 @@ function onMessage(evt)
 		console.log('listAdd '+globalList.length+' '+arg[1]);
 		globalList[globalList.length]=arg[1];
 	}
-	else if (cmd=="openEmpire")
+	else if (cmd=="openGame")
 	{
-		// This will draw the main empire window
-		empireOpen(arg[1]);
+		var game=arg[1];
+		
+		console.log("openGame: "+game);
+		
+		if (game=="empire")
+		{
+			// This will draw the main empire window
+			empireOpen(arg[2]);
+		}
+		else if (game=="hmeg") // || (game=="Hmeg") || (game=="HMEG"))
+		{
+			// This will draw the main HMEG window
+			hmegOpen(arg[2]);
+		}
+		else if (game=="TextAdventure")
+		{
+			// This will draw the main HMEG window
+			TextAdventureOpen(arg[1]);
+		}
+		else if (game=="CardGame")
+		{
+			cityPvpOpen(arg[2]); // TODO: Make own client!
+		}
+		else
+		{
+			console.log("unknown game " + game);
+			doError("unknown game: '" + game+"'");
+		}
 	}
-	else if (cmd=="openHmeg")
+	else if (cmd=="playerPreference")
 	{
-		// This will draw the main HMEG window
-		hmegOpen(arg[1]);
+		// This is currently only used by 3d client for keyboard mapping, ignoring it for now.
 	}
-	else if (cmd=="openRoboGame")
+	/*else if (cmd=="setClientIdxAndCode")
 	{
-		// This will draw the main empire window
-		RoboGameOpen(arg[1]);
-	}
-	else if (cmd=="openTextAdventure")
-	{
-		// This will draw the main HMEG window
-		TextAdventureOpen(arg[1]);
-	}
-	else if (cmd=="openCardGame")
-	{
-		cityPvpOpen(arg[1]); // TODO: Make own client!
-	}
+		clientIdx=arg[1];
+		clientPin=arg[2];
+	}*/
 	else
 	{
-	    console.log("unknown command " + cmd);
+		console.log("unknown command " + cmd);
 		doError("Did not understand: '" + cmd+"'");
 	}
 

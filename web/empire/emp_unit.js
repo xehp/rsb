@@ -21,19 +21,17 @@ function EmpUnit(world, parent, emType, arg)
 	EmpBase.call(this, world, parent, emType, arg); // call super constructor
 }
 
-EmpUnit.prototype.readSelf=function(arg)
+EmpUnit.prototype.readSelf=function(wr)
 {
-	var n=EmpBase.prototype.readSelf.call(this, arg);
+	EmpBase.prototype.readSelf.call(this, wr);
 	
 
-	this.unitOwner=parseInt(arg[n+0]);
-	this.unitTime=parseInt(arg[n+1]);
-	this.unitHealth=parseInt(arg[n+2]);
-	this.unitType=parseInt(arg[n+3]);
-	//this.attackPoints=parseInt(arg[n+4]);
-	this.movePoints=parseInt(arg[n+5]);
-
-	return arg.length;
+	this.unitOwner=parseInt(wr.readNext());
+	this.unitTime=parseInt(wr.readNext());
+	this.unitHealth=parseInt(wr.readNext());
+	this.unitType=parseInt(wr.readNext());
+	wr.skip(1); //this.attackPoints=parseInt(wr.readNext());
+	this.movePoints=parseInt(wr.readNext());
 }
 
 EmpUnit.prototype.getMovePointsUpdated=function()
@@ -96,6 +94,10 @@ EmpUnit.prototype.getMass=function()
 	{
 		return t.unitMass;
 	}
+    else
+    {
+        console.log("did not find mass for '" + t+"'");
+    }
 	return 0;
 }
 

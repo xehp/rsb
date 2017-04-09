@@ -17,13 +17,11 @@ function MirrorString(world, parent, emType, arg)
 	
 }
 
-MirrorString.prototype.readSelf=function(arg)
+MirrorString.prototype.readSelf=function(wr)
 {
-	var n = MirrorBase.prototype.readSelf.call(this, arg);
+	MirrorBase.prototype.readSelf.call(this, wr);
 
-	this.order=hlibRemoveQuotes(arg[n]);
-	
-	return arg.length;
+	this.order=hlibRemoveQuotes(wr.readNext());
 }
 
 

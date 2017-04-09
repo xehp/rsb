@@ -14,20 +14,18 @@ function EmpSector(world, parent, emType, arg)
 	EmpBase.call(this, world, parent, emType, arg); // call super constructor
 
 	// TODO The base class MirrorBase will do readSelf which should make the following 2 lines superflous, not just superflous but they create problems if the number of parameters are changed.
-	this.unitOwner=parseInt(arg[4]);
-	this.sectorTerrain=parseInt(arg[5]);
+	//this.unitOwner=parseInt(arg[4]);
+	//this.sectorTerrain=parseInt(arg[5]);
 
 	this.seaColor="#CFCFDF";
 }
 
-EmpSector.prototype.readSelf=function(arg)
+EmpSector.prototype.readSelf=function(wr)
 {
-	var n = EmpBase.prototype.readSelf.call(this, arg);
+	EmpBase.prototype.readSelf.call(this, wr);
 
-	this.unitOwner=parseInt(arg[n]);
-	this.sectorTerrain=parseInt(arg[n+1]);
-
-	return n+2;	
+	this.unitOwner=parseInt(wr.readNext());
+	this.sectorTerrain=parseInt(wr.readNext());
 }
 
 
@@ -117,7 +115,10 @@ EmpSector.prototype.showSectorSubUnitContext=function(context, x, y, width, heig
 	{
 		for(i in this.children)
 		{
-			this.children[i].showSelfUnitContextXY(context, x, y, width, height);
+            if (this.children[i]!=null)
+            {
+			    this.children[i].showSelfUnitContextXY(context, x, y, width, height);
+            }
 		}
 	}
 	else if (n>0)

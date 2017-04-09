@@ -11,27 +11,27 @@ HmegWorld.prototype.constructor = HmegWorld;
 function HmegWorld(world, parent, arg)
 {	
 	MirrorBase.call(this, world, parent, arg); // call super constructor
-	console.log("HmegWorld: '"+this.arg+"'");	
+	console.log("HmegWorld: '"+arg+"'");	
 
-	this.eUnitTypeList;
-	this.eStatesList=null;
-	this.eTerrain=null;
+	//this.eUnitTypeList=null;
+	//this.eStatesList=null;
+	//this.eTerrain=null;
 	
-	this.playerAvatar=null;
+	//this.playerAvatar=null;
 }
 
 
-HmegWorld.prototype.readSelf=function(arg)
+HmegWorld.prototype.readSelf=function(wr)
 {
-	var n = MirrorBase.prototype.readSelf.call(this, arg);
+	MirrorBase.prototype.readSelf.call(this, wr);
 
-	this.gameTime=arg[6];
-	this.gameSpeed=arg[10];
+	this.gameTime=wr.getAbsArg(6);
+	this.gameSpeed=wr.getAbsArg(10);
 	
 	this.mirrorDb.empireWorld=this;
 
 	//this.info=arg.slice(3);
-	return arg.length;
+	return wr.getArgLen();  // TODO remove this, return value is not used anyway
 }
 
 HmegWorld.prototype.selfToString=function()

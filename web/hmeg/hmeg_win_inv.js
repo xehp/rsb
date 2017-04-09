@@ -5,12 +5,12 @@
 
 
 
-HmegWinInventory.prototype = Object.create(DivBase.prototype);
+HmegWinInventory.prototype = Object.create(DivMouse.prototype);
 HmegWinInventory.prototype.constructor = HmegWinInventory;
 
 function HmegWinInventory(parentWin)
 {	
-	DivBase.call(this, parentWin); // call super constructor
+	DivMouse.call(this, parentWin); // call super constructor
 
 	this.ScreenSizeX = 10;
 
@@ -93,7 +93,7 @@ HmegWinInventory.prototype.addEventListenersDiv=function()
 	this.element=document.getElementById("mapCanvas");
 	this.context=this.element.getContext("2d");
 
-	DivBase.prototype.addEventListenersDiv.call(this, "mapCanvas");
+	DivMouse.prototype.addEventListenersDiv.call(this, "mapCanvas");
 
 }
 
@@ -124,11 +124,11 @@ HmegWinInventory.prototype.showWorldMapSectors=function(context, hmegRoom)
 						
 				//console.log("showWorldMapSectors "+i+" "+s.index+" "+s.selfToString()+ " "+xy.x+" "+xy.y);
 
-				// Remove these tow lines later
+				// Remove these two lines later
 				context.fillStyle="#d0c0d0";				
 				context.fillRect(xy.x, xy.y, this.sectorWidth, this.sectorHeight);
 				
-				s.showSelfContextXY(context ,xy.x, xy.y, this.sectorWidth, this.sectorHeight);
+				s.showSelfContextXY(context ,xy.x+this.sectorWidth/2, xy.y+this.sectorHeight/2, this.sectorWidth, this.sectorHeight);
 
 
 				context.font = '8pt Calibri';
@@ -178,10 +178,7 @@ HmegWinInventory.prototype.initRoom=function()
 		var w = d.rootObj;
 		if (w!=null)
 		{
-		
-			//this.currentRoom = w.findSubObjectByName("spawnRoom");  // TODO: This shall be the room that is parent of avatar.
-			//this.currentRoom = d.getById(p.avatarId).parent;
-			this.currentRoom = d.getById(p.avatarId);
+			this.currentRoom = p.getAvatar();
 			if (this.currentRoom !=null)
 			{
 				this.mapSizeX=this.sectorWidth * this.currentRoom.xSectors;
@@ -366,7 +363,6 @@ HmegWinInventory.prototype.center=function()
 	this.drawDiv();	
 }
 
-
 HmegWinInventory.prototype.setScrollToHome=function()
 {
 	if (rootDiv!=null)
@@ -411,6 +407,23 @@ HmegWinInventory.prototype.setScrollToHome=function()
 			}
 		}		
 	}	
-				
 }
 
+HmegWinInventory.prototype.onkeypress=function(event)
+{
+		//console.log('keypress: ' + event.which);		
+		switch(event.which)
+		{
+			default:
+				if (event.which<32)
+				{
+					console.log('keypress: return');				
+					this.parentWin.backToPreviousSubWin();
+				}
+				else
+				{
+				        //websocket.send('keypress "'+event.which+'"');
+				}
+		        break;
+		}
+}

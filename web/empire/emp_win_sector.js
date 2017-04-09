@@ -26,7 +26,7 @@ EmpWinSectors.prototype.defineDiv=function(divSize)
 	var newPage='';
 
 	// The central area of the page	
-	newPage+='<div style="width:'+divSize.x+'px; height:'+divSize.y+'px; overflow-x: scroll; overflow-y: scroll;">';
+	newPage+='<div id="terrainDiv" style="width:'+divSize.x+'px; height:'+divSize.y+'px; overflow-x: scroll; overflow-y: scroll; float:right;">';
 
 
 	newPage+='<div>';
@@ -36,9 +36,10 @@ EmpWinSectors.prototype.defineDiv=function(divSize)
 	newPage+='<div style="text-align:left">';
 	newPage+='<input class=empbutton id="upButton" type="button" value="up" onclick="rootDiv.mapSelection=rootDiv.mapSelection.parent; rootDiv.mapSetShowState(0)">';
 	newPage+='<input class=empbutton id="moveButton" type="button" value="move" onclick="rootDiv.mapMoveOrder()">';
-	newPage+='<input class=empbutton id="boardButton" type="button" value="go aboard   " onclick="rootDiv.mapGoAboard()">';
-	newPage+='<input class=empbutton id="unselectButton" type="button" value="unselect" onclick="rootDiv.clearSelectionList(); rootDiv.mapSetShowState(2)"></br>';
-	newPage+='<p>';
+	newPage+='<input class=empbutton id="boardButton" type="button" value="go aboard" onclick="rootDiv.mapGoAboard()">';
+	newPage+='<input class=empbutton id="unselectButton" type="button" value="unselect" onclick="rootDiv.clearSelectionList(); rootDiv.mapSetShowState(2)">';
+	newPage+='<input class=empbutton id="mergeButton" type="button" value="merge" onclick="rootDiv.mergeUnits()">';
+	newPage+='<br><p>';
 	newPage+='</div>';
 
 
@@ -56,7 +57,7 @@ EmpWinSectors.prototype.addEventListenersDiv=function()
 	this.currentSectorElement=document.getElementById("currentSectorCanvas");
 	this.currentSectorContext=this.currentSectorElement.getContext("2d");
 
-	DivBase.prototype.addEventListenersDiv.call(this, "currentSectorCanvas");
+	DivMouse.prototype.addEventListenersDiv.call(this, "currentSectorCanvas");
 
 	this.addEventListenersDivList();
 

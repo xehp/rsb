@@ -2,7 +2,7 @@
 // Copyright (C) 2014 Henrik Bjorkman www.eit.se/hb
 // Created 2014-12-26 by Henrik Bjorkman www.eit.se/hb
 
-EmpWinMsg.prototype = Object.create(DivBase.prototype);
+EmpWinMsg.prototype = Object.create(DivMsg.prototype);
 EmpWinMsg.prototype.constructor = EmpWinMsg;
 
 
@@ -11,29 +11,18 @@ EmpWinMsg.prototype.constructor = EmpWinMsg;
 
 function EmpWinMsg(parentWin)
 {
-	DivBase.call(this, parentWin); // call super constructor
-
-	// constants
-	this.offsetY=36;
-
-	this.sectorSizeX=rootDiv.mapSectorWidth;
-	this.sectorSizeY=rootDiv.mapSectorHeight;
-	this.textOffsetY=(this.sectorSizeY*3)/4;
-	
-	this.parentWin=parentWin;
-
-	this.orderList=[]; // is this used
+	DivMsg.call(this, parentWin); // call super constructor
 }
 
 
 
 
-EmpWinMsg.prototype.defineArea = function(divSize)
+EmpWinMsg.prototype.defineDiv = function(divSize)
 { 
 	var newPage='';
 
 	// The messages are shown here in the messages text area
-	newPage+='<div style="width:'+divSize.x+'px; height:'+divSize.y+'px;">';
+	newPage+='<div style="width:'+divSize.x+'px; height:'+divSize.y+'px;float:right">';
 	if (this.parentWin.mobileMode)
 	{
 		newPage+='<textarea id="msgTextArea" class=emptext readOnly="yes" onmouseup="rootDiv.mapSetShowState(6)" style="width:'+divSize.x+'px; height:'+divSize.y+'px;"></textarea><br/>';
@@ -47,9 +36,22 @@ EmpWinMsg.prototype.defineArea = function(divSize)
 	return newPage;
 }
 
-EmpWinMsg.prototype.drawWin = function()
+
+EmpWinMsg.prototype.addEventListenersDiv=function()
 {
-	// show messages from the round buffer
+	DivMsg.prototype.addEventListenersDiv.call(this);
+	
+	if (this.prevText == "")
+	{
+		this.addText("Welcome to empire\n");
+	}
+}
+
+
+EmpWinMsg.prototype.drawDiv = function()
+{
+
+	// Find the round buffer used to send text lines from server
 	var w=rootDiv.empDb.getEmpireWorld();
 	if (w!=null)
 	{		
@@ -65,7 +67,8 @@ EmpWinMsg.prototype.drawWin = function()
 					var r=n.eRoundBuffer;
 					if (r!=null)
 					{
-						r.showSelfOnTextArea("msgTextArea");
+						// show messages from the round buffer
+						this.msgIndex = r.showSelfOnTextArea(this, this.msgIndex);
 					}
 				}
 				else
@@ -77,12 +80,3 @@ EmpWinMsg.prototype.drawWin = function()
 	}
 }
 
-/*
-EmpRoundBuffer.prototype.textBoxAppend=function(textAreaName, msg)
-{
-	var e = document.getElementById(textAreaName);
-
-	e.value+=hlibRemoveQuotes(msg)+"\n";
-	e.scrollTop = e.scrollHeight;
-}
-*/

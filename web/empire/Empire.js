@@ -5,7 +5,7 @@
 
 
 
-
+// This is called from on.js when server has sent the command "openGame empire"
 function empireOpen(headingText)
 {
 	document.title = clientVersion;
@@ -18,7 +18,7 @@ function empireOpen(headingText)
 
 	rootDiv.mapInitData();
 	rootDiv.mapHeadingText=headingText;
-	//rootDiv.mapOpenCreateCanvas(headingText);
+	//rootDiv.mapOpenCreateCanvas(headingText); // Not showing the empire main window yet, waiting for server to send command showWorld
 	rootDiv.mapSetShowState(0);
 	rootDiv.mapClearSelections();
 

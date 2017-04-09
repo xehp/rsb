@@ -5,12 +5,13 @@
 
 
 
-EmpWinTerrain.prototype = Object.create(DivBase.prototype);
+EmpWinTerrain.prototype = Object.create(DivMouse.prototype);
 EmpWinTerrain.prototype.constructor = EmpWinTerrain;
 
+// This class handles a div that can show the world map in a "div". A div is a part of a html page. 
 function EmpWinTerrain(parentWin)
 {	
-	DivBase.call(this, parentWin); // call super constructor
+	DivMouse.call(this, parentWin); // call super constructor
 
 	this.scrollOffsetX=null; // in pixels
 	this.scrollOffsetY=null;
@@ -22,7 +23,8 @@ function EmpWinTerrain(parentWin)
 	this.scrollLeftRemembered=null;
 }
 
-
+// This is called when this div shall be added to the page.
+// NOTE this only sets up the page. When it is time to draw the div drawDiv is called.
 EmpWinTerrain.prototype.defineDiv=function(divSize)
 {
     // http://stackoverflow.com/questions/9798331/zoom-a-browser-window-view-with-javascript
@@ -73,13 +75,15 @@ EmpWinTerrain.prototype.defineDiv=function(divSize)
 
 	// The central area of the page	
 	var newPage='';
-	newPage+='<div id="terrainDiv" style="width:'+divSize.x+'px; height:'+divSize.y+'px; overflow-x: scroll; overflow-y: scroll;">';
+	//newPage+='<div id="terrainDiv" style="width:'+divSize.x+'px; height:'+divSize.y+'px;">';
+	newPage+='<div id="terrainDiv" style="width:'+divSize.x+'px; height:'+divSize.y+'px; overflow-x: scroll; overflow-y: scroll; float:right;">';
 	newPage+='<canvas id="myCanvas" width="'+canvasXSize+'px" height="'+this.mapSizeY+'px"></canvas>';
 	newPage+='</div>';
 
 	return newPage;		
 }
 
+// After all "div" have been setup (after defineDiv but before drawDiv) this is called so that each div can register and remember its elements etc.
 EmpWinTerrain.prototype.addEventListenersDiv=function()
 {
 	if (this.scrollTopRemembered!=null)
@@ -91,77 +95,40 @@ EmpWinTerrain.prototype.addEventListenersDiv=function()
 	this.canvasElement=document.getElementById("myCanvas");
 	this.context=this.canvasElement.getContext("2d");
 
-	DivBase.prototype.addEventListenersDiv.call(this, "myCanvas");
+	DivMouse.prototype.addEventListenersDiv.call(this, "myCanvas");
 
 }
 
-EmpWinTerrain.prototype.showWorldMapSectors=function(context, t, step)
+
+// internal help function called from drawDiv
+EmpWinTerrain.prototype.showWorldMapSectors=function(context, t)
 {
-		var cl = t.children;
-		if (cl!=null)
+	var cl = t.children;
+	if (cl!=null)
+	{
+		var i;
+		for(i in cl)
 		{
-			var i;
-			for(i in cl)
+			if (cl[i] instanceof EmpSector)
 			{
-				if (cl[i] instanceof EmpSector)
-				{
-					var s=cl[i];
-					//console.log("EmpWinTerrain.prototype.drawDiv "+s.index+" "+s.selfToString());
-					
-					var c=t.translateSectorIndexToColumn(i);
-					var r=t.translateSectorIndexToRow(i);			
-					var offset=rootDiv.mapCalcOffSet(r);
-					var canvasXY=this.fromMapXYToCanvas({x: offset+c*rootDiv.mapSectorWidth, y: r*rootDiv.mapSectorHeight}); 
-		
-		
-					s.showSelfSectorContextBkg(context, canvasXY.x, canvasXY.y, rootDiv.mapSectorWidth, rootDiv.mapSectorHeight);
-					s.showSelfSectorContextImg(context, canvasXY.x, canvasXY.y, rootDiv.mapSectorWidth, rootDiv.mapSectorHeight);
-					s.showSectorSubUnitContext(context, canvasXY.x, canvasXY.y, rootDiv.mapSectorWidth, rootDiv.mapSectorHeight);
-				}
+				var s=cl[i];
+				//console.log("EmpWinTerrain.prototype.drawDiv "+s.index+" "+s.selfToString());
+				
+				var c=t.translateSectorIndexToColumn(i);
+				var r=t.translateSectorIndexToRow(i);			
+				var offset=rootDiv.mapCalcOffSet(r);
+				var canvasXY=this.fromMapXYToCanvas({x: offset+c*rootDiv.mapSectorWidth, y: r*rootDiv.mapSectorHeight}); 
+	
+	
+				s.showSelfSectorContextBkg(context, canvasXY.x, canvasXY.y, rootDiv.mapSectorWidth, rootDiv.mapSectorHeight);
+				s.showSelfSectorContextImg(context, canvasXY.x, canvasXY.y, rootDiv.mapSectorWidth, rootDiv.mapSectorHeight);
+				s.showSectorSubUnitContext(context, canvasXY.x, canvasXY.y, rootDiv.mapSectorWidth, rootDiv.mapSectorHeight);
 			}
 		}
-}
-
-/*
-EmpWinTerrain.prototype.drawDiv=function()
-{
-	if (rootDiv.empDb!=null)
-	{	
-		var w = rootDiv.empDb.getEmpireWorld();
-		
-		if (w!=null)
-		{
-			// get the size of our image/map
-			var t=w.getEmpireTerrain();
-			
-			if (t!=null)
-			{
-				this.mapSizeX=rootDiv.mapSectorWidth * t.sizeX;
-				this.mapSizeY=rootDiv.mapSectorHeight * t.sizeY;
-				var canvasXSize=Math.round(this.mapSizeX+rootDiv.mapSectorWidth/2);
-				var canvasYSize=Math.round(this.mapSizeY+rootDiv.mapSectorWidth/4);
-	
-				// flickering fix, see: http://stackoverflow.com/questions/2795269/does-html5-canvas-support-double-buffering
-				var tmpCanvas = document.createElement('canvas');
-				tmpCanvas.width = canvasXSize;
-				tmpCanvas.height = canvasYSize;
-				var context = tmpCanvas.getContext('2d');
-	
-				// show world map sectors
-				this.showWorldMapSectors(context, t, 0);
-				
-				var element=this.canvasElement;
-				element.width = canvasXSize;
-				element.height = canvasYSize;
-				this.context.fillStyle="#E0E0E0";				
-				this.context.fillRect(0, 0, element.width, element.height);
-				this.context.drawImage(tmpCanvas, 0, 0);
-			}
-		}		
 	}
 }
-*/
 
+// This is called when this div shall be drawn (or redrawn)
 EmpWinTerrain.prototype.drawDiv=function()
 {
 	if (rootDiv.empDb!=null)
@@ -187,8 +154,7 @@ EmpWinTerrain.prototype.drawDiv=function()
 				this.context.fillRect(0, 0, canvasElement.width, canvasElement.height);
 		
 				// show world map sectors
-				this.showWorldMapSectors(this.context, t, 0);
-				
+				this.showWorldMapSectors(this.context, t);
 			}
 		}		
 	}
@@ -231,7 +197,7 @@ EmpWinTerrain.prototype.click=function(mouseUpPos)
 	
 		
 	// show selected unit/sector etc
-	this.parentWin.empWinMenu.mapUpdateUpperTextAreas();
+	this.parentWin.empWinMenu.drawDiv();
 	
 }
 
@@ -240,6 +206,7 @@ EmpWinTerrain.prototype.click=function(mouseUpPos)
 // http://www.w3schools.com/tags/canvas_clip.asp
 
 
+// This is called if mouse drag has been detected. It will reposition the map center.
 EmpWinTerrain.prototype.drag=function(mouseDownPos, mouseUpPos)
 {
     var mouseDrag=this.mouseDiff(mouseDownPos, mouseUpPos);
@@ -275,6 +242,8 @@ EmpWinTerrain.prototype.drag=function(mouseDownPos, mouseUpPos)
 	this.drawDiv();
 }
 
+// This is used to translate xy coordinates from canvas to map.
+// On canvas 0,0 is upper left corner.
 EmpWinTerrain.prototype.fromCanvasToMapXY=function(canvasPos)
 {
 	var x = canvasPos.x+this.scrollOffsetX;
@@ -312,6 +281,7 @@ EmpWinTerrain.prototype.fromCanvasToMapXY=function(canvasPos)
 	return {x: x, y: y};
 }
 
+// This is used to translate xy coordinates from map to canvas.
 EmpWinTerrain.prototype.fromMapXYToCanvas=function(mapPos)
 {
 
@@ -344,6 +314,7 @@ EmpWinTerrain.prototype.fromMapXYToCanvas=function(mapPos)
 	return {x: x, y: y};
 }
 
+// Recenters the map (so that the players state is in center of the canvas.
 EmpWinTerrain.prototype.center=function()
 {
 	this.scrollOffsetX=null;
@@ -353,6 +324,8 @@ EmpWinTerrain.prototype.center=function()
 }
 
 
+// internal help function
+// It calculates map offsets so that the players state is in center of the canvas.
 EmpWinTerrain.prototype.setScrollToHome=function()
 {
 	if (rootDiv!=null)

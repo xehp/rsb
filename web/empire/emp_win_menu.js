@@ -17,29 +17,35 @@ function EmpWinMenu(parentWin)
 }
 
 
+// This updates some text fields in the menu/button area.
+// Right text area is not to the right any longer.
 EmpWinMenu.prototype.mapUpdateRightTextArea=function()
 {
-	if (rootDiv.nSelected()>0)
-	{
-		var strInfo=""+rootDiv.nSelected();
-		this.mapSetUpperTextArea2(strInfo);
-	}
-	else
-	{
-		this.mapSetUpperTextArea2('');
-	}
-
+    // This shows the number of selected units. 
+	var strInfo=(rootDiv.nSelected()>0) ? ""+rootDiv.nSelected() : "";
+	this.mapSetUpperTextAreaN("upperTextArea2", strInfo);
 
 	var w=rootDiv.empDb.empireWorld;
 	if (w!=null)
 	{
-		this.mapSetUpperTextAreaN("msPerTickTextArea", w.gameSpeed);
-		this.mapSetUpperTextAreaN("gameTimeTextArea", w.getGameTime());
+		// game time speed in number of game ticks per second.
+		// TODO this don't seem to be available any longer.
+		//this.mapSetUpperTextAreaN("msPerTickTextArea", w.gameSpeed); 
+
+		// the game time in number of game ticks.
+		this.mapSetUpperTextAreaN("gameTimeTextArea", w.getGameTime()); 
+
+		// player money
 		var state=w.getState();
 		if (state!=null)
 		{
 			this.mapSetUpperTextAreaN("playerMoneyTextArea", state.getSavedMoneyUpdated());
 		}
+		else
+		{
+			this.mapSetUpperTextAreaN("playerMoneyTextArea", "no state");
+		}
+
 	}
 
 }
@@ -56,28 +62,9 @@ EmpWinMenu.prototype.mapSetUpperTextAreaN=function(areaName, msg)
 }
 
 
-EmpWinMenu.prototype.mapSetUpperTextArea1=function(msg)
-{
-	this.mapSetUpperTextAreaN("upperTextArea1", msg);
-}
 
-EmpWinMenu.prototype.mapSetUpperTextArea2=function(msg)
-{
-	this.mapSetUpperTextAreaN("upperTextArea2", msg);
-}
 
-/*
-EmpWinMenu.prototype.updateUpperTextAreaTicksPerMs=function(msg)
-{
-	this.mapSetUpperTextAreaN("msPerTickTextArea", msg);
-}
-
-EmpWinMenu.prototype.updateUpperTextAreaPlayerMoney=function(msg)
-{
-	this.mapSetUpperTextAreaN("playerMoneyTextArea", msg);
-}
-*/
-
+// TODO if this is still used, mode it to emp_win_hdr.js
 EmpWinMenu.prototype.mapUpdateUpperTextArea=function()
 {
 	var strInfo='';
@@ -125,8 +112,7 @@ EmpWinMenu.prototype.mapUpdateUpperTextArea=function()
 	}
 
 
-
-	this.mapSetUpperTextArea1(strInfo);
+	this.mapSetUpperTextAreaN("upperTextArea1", strInfo);
 }
 
 
@@ -141,100 +127,86 @@ EmpWinMenu.prototype.mapSetButtonArea=function(d)
 }
 	
 	
-EmpWinMenu.prototype.mapUpdateButtonArea=function()
-{
-	if (rootDiv.nSelected()>0)
-	{	
-		this.mapSetButtonArea(null);
-	}
-	else
-	{
-		this.mapSetButtonArea('disabled');
-	}
-}
 	
-
-EmpWinMenu.prototype.mapUpdateUpperTextAreas=function()
+// This updates some text areas currently to the left not up.
+EmpWinMenu.prototype.drawDiv=function()
 {
 	this.mapUpdateUpperTextArea();
+	
 	//mapUpdateLeftTextAreas();
+	
 	this.mapUpdateRightTextArea();
-	this.mapUpdateButtonArea();
+
+	if (document.getElementById('moveButton')!=null)
+	{
+		if (rootDiv.nSelected()>0)
+		{	
+			this.mapSetButtonArea(null);
+		}
+		else
+		{
+			this.mapSetButtonArea('disabled');
+		}
+		
+		document.getElementById('mergeButton').disabled=(rootDiv.nSelected()>=2)?null:'disabled';
+	}
+
 }
 
 
-EmpWinMenu.prototype.defineASide=function(divSize)
-{
-	var newPage='';
-
-	// The list of buttons to the left
-	newPage+='<aside id="buttonList" class="center" style="width:'+divSize.x+';float:left;">';
-	
-	newPage+='<input type="text" id="upperTextArea2" class=emptext size="10" readOnly="yes"></br>';
-	newPage+='<input class=empbutton type="button" value="clear" onclick="rootDiv.mapMemoryClear()"></br>';
-	newPage+='<p>'
-	newPage+='<input class=empbutton id="mapButton"         type="button" value="map"       onclick="rootDiv.mapSetShowState(0)"></br>';
-	newPage+='<input class=empbutton id="moneyButton"       type="button" value="relations" onclick="rootDiv.mapSetShowState(1)"></br>';
-	newPage+='<input class=empbutton id="terminalButton"    type="button" value="terminal"  onclick="rootDiv.mapSetShowState(5)"></br>';
-	newPage+='<input class=empbutton id="menuButton"        type="button" value="menu"      onclick="rootDiv.mapSetShowState(6)"></br>';
-	
-	newPage+='<input class=empbutton id="zoomInButton"  type="button" value="zoomIn" onclick="rootDiv.mapZoom*=2; rootDiv.mapSetShowState(2)"></br>';		
-	newPage+='<input class=empbutton id="zoomOutButton"  type="button" value="zoomOut" onclick="rootDiv.mapZoom/=2; rootDiv.mapSetShowState(2)"></br>';		
-	newPage+='<p>'
-	newPage+='<input class=empbutton id="debugDump"  type="button" value="debugDump" onclick="rootDiv.empDb.rootObj.debugDump()"></br>';		
-	newPage+='<p>'
-	newPage+='<input class=empbutton id="mapQuitButton"     type="button" value="quit"     onclick="rootDiv.mapCanvasCancel()"><br>';
-	newPage+='<p>'
-	newPage+='<input type="text" id="msPerTickTextArea" class=emptext size="10" readOnly="yes"></br>';
-	newPage+='<input type="text" id="gameTimeTextArea" class=emptext size="10" readOnly="yes"></br>';
-	newPage+='<input type="text" id="playerMoneyTextArea" class=emptext size="10" readOnly="yes"></br>';
-
-	newPage+='<p>'
-	newPage+='<a href="empire/help.html" target="_blank">help</a>';
-
-	newPage+='</aside>';
-
-
-	return newPage;
-}
 
 EmpWinMenu.prototype.defineDiv=function(divSize)
 {
 	var newPage='';
 
 	// The central area of the page	
-	newPage+='<div id="buildDiv" style="width:'+divSize.x+'px; height:'+divSize.y+'px; overflow-x: scroll; overflow-y: scroll;">';
+	newPage+='<div id="buildDiv">';
 
-	newPage+='<div class="center" style="float:left;">';
 	newPage+='<input type="text" id="upperTextArea2" class=emptext size="10" readOnly="yes"></br>';
+	newPage+='<input class=empbutton type="button" value="clear" onclick="rootDiv.mapMemoryClear()"></br>';
+	newPage+='<p>'
+	newPage+='<input class=empbutton id="mapButton"         type="button" value="map"       onclick="rootDiv.mapSetShowState(0)"></br>';
+	newPage+='<input class=empbutton id="moneyButton"       type="button" value="diplomacy"     onclick="rootDiv.mapSetShowState(1)"></br>';
+	newPage+='<input class=empbutton id="terminalButton"    type="button" value="terminal"  onclick="rootDiv.mapSetShowState(5)"></br>';
+
 	if (this.parentWin.mobileMode)
 	{
-		newPage+='<input class=empbutton type="button" value="clear" onclick="rootDiv.mapMemoryClear()"></br>';
-		newPage+='<p>'
-		newPage+='<input class=empbutton id="mapButton"         type="button" value="map"       onclick="rootDiv.mapSetShowState(0)"></br>';
-		newPage+='<input class=empbutton id="moneyButton"       type="button" value="money"     onclick="rootDiv.mapSetShowState(1)"></br>';
-		newPage+='<input class=empbutton id="terminalButton"    type="button" value="terminal"  onclick="rootDiv.mapSetShowState(5)"></br>';
 		newPage+='<input class=empbutton id="textinputButton"   type="button" value="enterText" onclick="rootDiv.mapSetShowState(7)"></br>';
 		newPage+='<input class=empbutton id="desktopButton"  type="button" value="desktopMode" onclick="rootDiv.mobileMode=0; rootDiv.mapSetShowState(6)"></br>';
-		newPage+='<input class=empbutton id="zoomInButton"  type="button" value="zoomIn" onclick="rootDiv.mapZoom*=2; rootDiv.mapSetShowState(0)"></br>';		
-		newPage+='<input class=empbutton id="zoomOutButton"  type="button" value="zoomOut" onclick="rootDiv.mapZoom/=2; rootDiv.mapSetShowState(0)"></br>';		
-		newPage+='<p>'
-		newPage+='<input class=empbutton id="mapQuitButton"     type="button" value="quit"       onclick="rootDiv.mapCanvasCancel()"><br>';
-		newPage+='<p>'
-		newPage+='<a href="empire/help.html" target="_blank">help</a>';
 	}
 	else
 	{
-		newPage+='<input class=empbutton id="mobileButton"  type="button" value="mobileMode" onclick="rootDiv.mobileMode=1; rootDiv.mapSetShowState(6)"></br>';		
+		newPage+='<input class=empbutton id="menuButton"        type="button" value="menu"      onclick="rootDiv.mapSetShowState(6)"></br>';
 	}
 
+
+	
+	newPage+='<input class=empbutton id="zoomInButton"  type="button" value="zoomIn" onclick="rootDiv.mapZoom*=2; rootDiv.mapSetShowState(2)"></br>';		
+	newPage+='<input class=empbutton id="zoomOutButton"  type="button" value="zoomOut" onclick="rootDiv.mapZoom/=2; rootDiv.mapSetShowState(2)"></br>';
+		
+
+	newPage+='<input class=empbutton id="readyButton"  type="button" value="time+100" onclick="rootDiv.incReadyTime(100)"></br>';
+
+
+	if (!this.parentWin.mobileMode)
+	{
+		newPage+='<p>'
+		newPage+='<input class=empbutton id="debugDump"  type="button" value="debugDump" onclick="rootDiv.empDb.rootObj.debugDump()"></br>';		
+		newPage+='<p>'
+		//newPage+='<input type="text" id="msPerTickTextArea" class=emptext size="10" readOnly="yes"></br>'; // This is currently not used 
+		newPage+='<input type="text" id="gameTimeTextArea" class=emptext size="10" readOnly="yes"></br>';
+		newPage+='<input type="text" id="playerMoneyTextArea" class=emptext size="10" readOnly="yes"></br>';
+		newPage+='<p>'
+
+		newPage+='<input class=empbutton id="mobileButton"  type="button" value="mobileMode" onclick="rootDiv.mobileMode=1; rootDiv.mapSetShowState(6)"></br>';		
+	}
 	
 	newPage+='<p>'
+	newPage+='<input class=empbutton id="mapQuitButton"     type="button" value="quit"     onclick="rootDiv.mapCanvasCancel()"><br>';
+	newPage+='<p>'
+	newPage+='<a href="empire/help.html" target="_blank">help</a>';
 	
-	newPage+='<input type="text" id="msPerTickTextArea" class=emptext size="10" readOnly="yes"></br>';
-	newPage+='<input type="text" id="gameTimeTextArea" class=emptext size="10" readOnly="yes"></br>';
-	newPage+='<input type="text" id="playerMoneyTextArea" class=emptext size="10" readOnly="yes"></br>';
-	newPage+='</div>';
+	
 	
 	
 	newPage+='</div>';
@@ -249,9 +221,6 @@ EmpWinMenu.prototype.addEventListenersDiv=function()
 	//this.addEventListenersDiv("myCanvas");
 }
 
-EmpWinMenu.prototype.drawDiv=function()
-{
-}
 
 
 EmpWinMenu.prototype.click=function(mouseUpPos)

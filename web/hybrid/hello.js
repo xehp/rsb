@@ -21,11 +21,9 @@ var mainCanvas;
 function mainMouseMoveCallback(e) {
 	var movementX = e.movementX ||
 					e.mozMovementX ||
-					e.webkitMovementX ||
 					0;
 	var movementY = e.movementY ||
 					e.mozMovementY ||
-					e.webkitMovementY ||
 					0;
 
 	//console.log("X: " + movementX + ', Y: ' + movementY);
@@ -43,9 +41,12 @@ function mainMouseMoveCallback(e) {
 }
 
 function mainIsPointerLock() {
+
 	return document.pointerLockElement === mainCanvas ||
 		document.mozPointerLockElement === mainCanvas ||
 		document.webkitPointerLockElement === mainCanvas;
+
+	//return document.pointerLockElement === mainCanvas;
 }
 
 
@@ -84,13 +85,15 @@ function mainSetUpPointerLock()
 	document.addEventListener('webkitpointerlockchange', mainLockChangeAlert, false);
 
 
+	// Now we have two options (comment one of the below out):
+
 	// Shall we lock when user click?
-	/*mainCanvas.onclick = function() {
+	mainCanvas.onclick = function() {
 		mainCanvas.requestPointerLock();
-	}*/            
+	}            
 
 	// Or lock right away?
-	mainCanvas.requestPointerLock();
+	//mainCanvas.requestPointerLock();
 
 }
 
@@ -99,7 +102,7 @@ function mainReleasePointerLock()
 	console.log("mainReleasePointerLock");
 
 	document.exitPointerLock = document.exitPointerLock    ||
-	                           document.mozExitPointerLock ||
+	                           document.mozExitPointerLock   ||
 	                           document.webkitExitPointerLock;
 	
 	// Attempt to unlock
@@ -257,7 +260,7 @@ function mainStart() {
 
 
 	// Pointer lock
-	mainSetUpPointerLock();
+	();
 	
 
 
@@ -282,6 +285,7 @@ function mainStart() {
 */      
 
 // This shall be called from c++ code when its main has been called.
+// It calls this method so we can setup things that C++ could not set up.
 function allReady()
 {
 	console.log("allReady");
@@ -300,6 +304,7 @@ function allReady()
 }
 
 // This shall be called from c++ code before it exits
+// It calls this method so we can take down things set up by allReady.
 function allOver()
 {
 	console.log("allOver");

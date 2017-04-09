@@ -1,6 +1,4 @@
 <!DOCTYPE html>
-<!DOCTYPE>
-<meta charset="utf-8" />
 <html>
 <!--- Created 2014-03-14 by Henrik Bjorkman www.eit.se/hb --->
 <head>
@@ -17,7 +15,7 @@
 
 
 <!-- http://learningwebgl.com/blog/?p=28 -->
-<script type="text/javascript" src="RoboGame/glMatrix-0.9.5.min.js"></script>
+<!-- <script type="text/javascript" src="RoboGame/glMatrix-0.9.5.min.js"></script> -->
 
 <!-- TODO: Try to understand this. Read these: -->
 <!-- https://developer.mozilla.org/en-US/docs/Web/WebGL/Adding_2D_content_to_a_WebGL_context -->
@@ -53,10 +51,13 @@
 
 <script type="text/javascript" src="js/BigInteger.js"></script>
 <script type="text/javascript" src="js/hlib.js"></script>
+<script type="text/javascript" src="js/WordReader.js"></script>
 <script type="text/javascript" src="div/DivBase.js"></script>
+<script type="text/javascript" src="div/DivMouse.js"></script>
 <script type="text/javascript" src="div/DivButton.js"></script>
 <script type="text/javascript" src="div/DivButtonList.js"></script>
 <script type="text/javascript" src="div/DivTerminal.js"></script>
+<script type="text/javascript" src="div/DivMsg.js"></script>
 <script type="text/javascript" src="div/DivImg.js"></script>
 <script type="text/javascript" src="hmeg/hmeg_map_win.js"></script>
 <script type="text/javascript" src="mirror/MirrorBase.js"></script>
@@ -64,8 +65,12 @@
 <script type="text/javascript" src="mirror/MirrorLong.js"></script>
 <script type="text/javascript" src="mirror/MirrorString.js"></script>
 <script type="text/javascript" src="mirror/MirrrorRoundBuffer.js"></script>
+<script type="text/javascript" src="hmeg/ActivePlayerList.js"></script>
+<script type="text/javascript" src="hmeg/AvatarPlayerReferences.js"></script>
+<script type="text/javascript" src="hmeg/HmegImgList.js"></script>
 <script type="text/javascript" src="hmeg/hmeg_db.js"></script>
 <script type="text/javascript" src="hmeg/hmeg_world.js"></script>
+<script type="text/javascript" src="hmeg/hmegTerminal.js"></script>
 <script type="text/javascript" src="hmeg/hmeg_win_inv.js"></script>
 <script type="text/javascript" src="hmeg/hmeg_win_msg.js"></script>
 <script type="text/javascript" src="hmeg/hmeg_map_win.js"></script>
@@ -86,12 +91,15 @@
 <script type="text/javascript" src="empire/emp_sector_type_list.js"></script>
 <script type="text/javascript" src="empire/emp_unit_type.js"></script>
 <script type="text/javascript" src="empire/emp_unit_type_list.js"></script>
+<script type="text/javascript" src="empire/emp_money.js"></script>
 <script type="text/javascript" src="empire/emp_misc.js"></script>
 <script type="text/javascript" src="empire/emp_img.js"></script>
 <script type="text/javascript" src="empire/emp_win_menu.js"></script>
+<script type="text/javascript" src="empire/emp_win_hdr.js"></script>
 <script type="text/javascript" src="empire/emp_win_msg.js"></script>
 <script type="text/javascript" src="empire/emp_win_list.js"></script>
 <script type="text/javascript" src="empire/emp_win_build.js"></script>
+<script type="text/javascript" src="empire/emp_win_assemble.js"></script>
 <script type="text/javascript" src="empire/emp_win_sector.js"></script>
 <script type="text/javascript" src="empire/emp_win_states.js"></script>
 <script type="text/javascript" src="empire/emp_win_terrain.js"></script>
@@ -102,16 +110,7 @@
 <script type="text/javascript" src="empire/emp_world.js"></script>
 <script type="text/javascript" src="empire/emp_db.js"></script>
 <script type="text/javascript" src="empire/Empire.js"></script>
-<script type="text/javascript" src="RoboGame/RoboGameDb.js"></script>
-<script type="text/javascript" src="RoboGame/RoboGameWin.js"></script>
-<script type="text/javascript" src="RoboGame/RoboGameGlDiv.js"></script>
-<script type="text/javascript" src="RoboGame/RoboGameMain.js"></script>
-<script type="text/javascript" src="TextAdventure/TextAdventureMapWin.js"></script>
-<script type="text/javascript" src="TextAdventure/TextAdventureWin.js"></script>
-<script type="text/javascript" src="TextAdventure/TextAdventureMain.js"></script>
 <script type="text/javascript" src="mirror/MirrorFactory.js"></script>
-<script type="text/javascript" src="js/CityPvp.js"></script>
-<script type="text/javascript" src="js/ChatRoom.js"></script>
 <script type="text/javascript" src="js/do.js"></script>
 <script type="text/javascript" src="js/on.js"></script>
 <script type="text/javascript" src="js/set_server_url.js"></script>
@@ -143,6 +142,23 @@ http://www.w3schools.com/html/html_layout.asp
     padding:5px;
 }
 -->
+
+
+#buildDiv {
+    background-color:#eeceee;
+    float:left;
+    padding:10px;
+}
+
+#terrainDiv {
+    background-color:#eeeece;
+    float:left;
+    padding:10px;
+    overflow-x: scroll; 
+    overflow-y: scroll; 
+}
+
+
 
 </style>
 

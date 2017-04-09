@@ -15,15 +15,13 @@ function EmpTerrain(world, parent, emType, arg)
 	parent.eTerrain=this;
 }
 
-EmpTerrain.prototype.readSelf=function(arg)
+EmpTerrain.prototype.readSelf=function(wr)
 {
-	var n=EmpBase.prototype.readSelf.call(this, arg);
+	EmpBase.prototype.readSelf.call(this, wr);
 
 	this.mirrorDb.terrain=this;
-	this.sizeX=parseInt(arg[n]);
-	this.sizeY=parseInt(arg[n+1]);
-
-	return n+2;
+	this.sizeX=parseInt(wr.readNext());
+	this.sizeY=parseInt(wr.readNext());
 }
 
 // deprecated, to be removed when no longer used.

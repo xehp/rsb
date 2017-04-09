@@ -9,7 +9,7 @@
 function doSend(message)
 {
 	var str= ""+message;
-	if (str.substring(0, 9)!='mirrorAck')
+	if ((str.substring(0, 9)!='mirrorAck') && (str.substring(0, 9)!='avatarPos'))
 	{
 		console.log("SENT: " + message); 
 	}
@@ -149,6 +149,23 @@ function doIsMobile()
 	return false;
 }
 
+// Returns this position (>=0) if found, -1 if the string was not found 
+function findButtonText(buttonTexts, stringToFind)
+{
+	for (i=0;i<buttonTexts.length;i++)
+	{
+		var str=hlibRemoveQuotes(buttonTexts[i]);
+		//console.log('test string '+str);
+
+		if (str==stringToFind)
+		{
+			//console.log('found string '+stringToFind+' at pos '+i);
+			return i;
+		}
+	}
+	//console.log('didn\'t find string '+stringToFind);
+	return -1;
+}
 
 function doButtonQuery(headingText, buttonTexts)
 {
@@ -167,10 +184,25 @@ function doButtonQuery(headingText, buttonTexts)
 		for (i=0;i<buttonTexts.length;i++)
 		{
 			var buttonText=buttonTexts[i];
-			var extraButton='<input type="button" value='+buttonText+' id="button_'+i+'" onclick="doButtonQueryCallback('+i+')">';
-			newPage+=extraButton;
-			console.log('extraButton '+i+' '+buttonTexts[i]);
+			var mainButton='<input type="button" value='+buttonText+' id="button_'+i+'" onclick="doButtonQueryCallback('+i+')">';
+			newPage+=mainButton;
+			console.log('mainButton '+i+' '+buttonTexts[i]);
 		}
+		
+		// Did caller include a cancel button? If not we add one. Well unless it was a simple OK prompt.
+		if ((findButtonText(buttonTexts, "cancel")>=0) || (findButtonText(buttonTexts, "Cancel")>=0)|| (findButtonText(buttonTexts, "OK")>=0))
+		{
+			//console.log('cancel already included');
+		}
+		else
+		{
+			// Add a cancel button since there should always be one.
+			newPage+="<p>";
+			var extraButton='<input type="button" value="Cancel" id="button_cancel" onclick="doButtonQueryCallback(-1)">';			
+			newPage+=extraButton;
+			console.log('extraButton');
+		}
+		
 		$("body").empty();
 		$("body").append(newPage);
 	

@@ -6,8 +6,7 @@
 
 
 // subclass extends superclass
-MirrorLong.prototype = Object.create(MirrorBase.prototype);
-MirrorLong.prototype.constructor = MirrorLong;
+extend(MirrorLong, MirrorBase);
 
 function MirrorLong(world, parent, arg)
 {	
@@ -16,15 +15,14 @@ function MirrorLong(world, parent, arg)
 }
 
 
-MirrorLong.prototype.readSelf=function(arg)
+MirrorLong.prototype.readSelf=function(wr)
 {
-	var n = MirrorBase.prototype.readSelf.call(this, arg);
+	MirrorBase.prototype.readSelf.call(this, wr);
 
-	this.value=hlibRemoveQuotes(arg[n]);
+	this.value=hlibRemoveQuotes(wr.readNext());
 
 	//console.log("value "+this.value);
-	
-	return n+1;
+
 }
 
 

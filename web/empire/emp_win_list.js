@@ -4,7 +4,7 @@
 
 
 
-EmpWinList.prototype = Object.create(DivBase.prototype);
+EmpWinList.prototype = Object.create(DivMouse.prototype);
 EmpWinList.prototype.constructor = EmpWinList;
 
 
@@ -13,7 +13,7 @@ function EmpWinList(parentWin)
 {	
 	//console.log("EmpWinList:");
 
-	DivBase.call(this, parentWin); // call super constructor
+	DivMouse.call(this, parentWin); // call super constructor
 
 	this.textOffsetY=(rootDiv.mapSectorHeight*3)/4;
 	this.scrollOffsetY=0;
@@ -176,7 +176,7 @@ EmpWinList.prototype.drawUnitList=function(empObj)
 
 
 	// show selected unit/sector etc
-	this.parentWin.empWinMenu.mapUpdateUpperTextAreas();
+	this.parentWin.empWinMenu.drawDiv();
 }
 
 
@@ -235,7 +235,7 @@ EmpWinList.prototype.clickList=function(mouseUpPos)
 			var c=this.parentWin.empDb.getById(id);
 	
 			this.parentWin.mapSelection=c;
-			this.parentWin.empWinMenu.mapUpdateUpperTextAreas();
+			this.parentWin.empWinMenu.drawDiv();
 			if(c!=null)
 			{
 				console.log("c "+c.selfToString());;

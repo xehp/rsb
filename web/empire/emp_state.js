@@ -18,25 +18,22 @@ function EmpState(world, parent, emType, arg)
 	this.money=null;
 }
 
-EmpState.prototype.readSelf=function(arg)
+EmpState.prototype.readSelf=function(wr)
 {
-	var n = EmpBase.prototype.readSelf.call(this, arg);
+	EmpBase.prototype.readSelf.call(this, wr);
 
-	this.sectorOwner=parseInt(arg[n+0]);
-	this.unitTime=parseInt(arg[n+1]);
+	this.sectorOwner=parseInt(wr.readNext());
+	this.unitTime=parseInt(wr.readNext());
 
-	this.moneyEarned = parseInt(arg[n+2]);
-	this.moneySpent = parseInt(arg[n+3]);
-	this.headOfState = arg[n+4];
-	this.allyList = arg[n+5];
-	this.homeSectorId = parseInt(arg[n+6]);
-	this.stateMode = parseInt(arg[n+7]);
-	this.coRuler = arg[n+8];
-	this.hostileToState = arg[n+9];
-	this.stateMotto = arg[n+10];
-
-	
-	return n+6;
+	this.moneyEarned = parseInt(wr.readNext());
+	this.moneySpent = parseInt(wr.readNext());
+	this.headOfState = wr.readNext();
+	this.allyList = wr.readNext();
+	this.homeSectorId = parseInt(wr.readNext());
+	this.stateMode = parseInt(wr.readNext());
+	this.coRuler = wr.readNext();
+	this.hostileToState = wr.readNext();
+	this.stateMotto = wr.readNext();
 }
 
 EmpState.prototype.selfToString=function()

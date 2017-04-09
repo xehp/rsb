@@ -15,20 +15,18 @@ function EmpRoundBuffer(world, parent, emType, arg)
 	parent.eRoundBuffer=this;
 }
 
-EmpRoundBuffer.prototype.readSelf=function(arg)
+EmpRoundBuffer.prototype.readSelf=function(wr)
 {
-	var n = EmpBase.prototype.readSelf.call(this, arg);
+	EmpBase.prototype.readSelf.call(this, wr);
 
-	this.head = parseInt(arg[n]);
-	this.tail = parseInt(arg[n+1]);
-	this.msgCount = parseInt(arg[n+2]);
-	this.maxObjects = parseInt(arg[n+3]); // max number of messages stored in the round buffer, max index is: maxObjects*2-1
+	this.head = parseInt(wr.readNext());
+	this.tail = parseInt(wr.readNext());
+	this.msgCount = parseInt(wr.readNext());
+	this.maxObjects = parseInt(wr.readNext()); // max number of messages stored in the round buffer, max index is: maxObjects*2-1
 
     //console.log("EmpRoundBuffer.prototype.readSelf "+arg);
 
 	//this.info=arg.slice(3);
-	
-	return arg.length;
 }
 
 EmpRoundBuffer.prototype.selfToString=function()
@@ -50,7 +48,7 @@ EmpRoundBuffer.prototype.selfToString=function()
 
 
 
-EmpRoundBuffer.prototype.showSelfOnTextArea=function(textAreaName)
+EmpRoundBuffer.prototype.showSelfOnTextArea=function(div, msgCount)
 {
 	var nation=this.parent;
 	var nationList=nation.parent;
@@ -58,45 +56,31 @@ EmpRoundBuffer.prototype.showSelfOnTextArea=function(textAreaName)
 	//console.log("nr "+rootDiv.mapNation+" "+nationNr);
 	if (rootDiv.mapNation==nationNr)
 	{
-
-		this.textBoxClear(textAreaName);
-
 		//var len = this.children.length;
-		var j=this.head;
-		for (var i=0; i<this.maxObjects; ++i)
+		if (msgCount<0)
 		{
-			if (j in this.children)
+			msgCount=this.head;
+		}
+		
+		for (var i=0; i<=this.maxObjects; ++i)
+		{
+			if (msgCount in this.children)
 			{
-				var c = this.children[j];
+				var c = this.children[msgCount];
 				//var str = c.selfToString();
-				var str= c.objName+": "+c.order;
-				this.textBoxAppend(textAreaName, str);
+				//var str= c.objName+": "+c.order+"\n";
+				var str= c.order+"\n";
+				div.addText(str);
 			}
 
-			j++;
-			if (j>=this.maxObjects*2)
+			msgCount++;
+			if (msgCount>=this.maxObjects*2) // indexes can be twice that of max objects
 			{
-				j=0;
+				msgCount=0;
 			}
 		}
 	}
+	return this.tail;
 }
 
-
-EmpRoundBuffer.prototype.textBoxAppend=function(textAreaName, msg)
-{
-	var e = document.getElementById(textAreaName);
-
-	e.value+=hlibRemoveQuotes(msg)+"\n";
-	e.scrollTop = e.scrollHeight;
-}
-
-
-EmpRoundBuffer.prototype.textBoxClear=function(textAreaName)
-{
-	var e = document.getElementById(textAreaName);
-
-	e.value="";
-	e.scrollTop = e.scrollHeight;
-}
 

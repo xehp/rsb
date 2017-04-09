@@ -5,8 +5,8 @@
 
 
 // subclass extends superclass
-MirrorRoundBuffer.prototype = Object.create(MirrorBase.prototype);
-MirrorRoundBuffer.prototype.constructor = MirrorRoundBuffer;
+extend(MirrorRoundBuffer, MirrorBase);
+
 
 function MirrorRoundBuffer(world, parent, emType, arg)
 {	
@@ -15,20 +15,21 @@ function MirrorRoundBuffer(world, parent, emType, arg)
 	parent.eRoundBuffer=this;
 }
 
-MirrorRoundBuffer.prototype.readSelf=function(arg)
+MirrorRoundBuffer.prototype.readSelf=function(wr)
 {
-	var n = MirrorBase.prototype.readSelf.call(this, arg);
+	MirrorBase.prototype.readSelf.call(this, wr);
 
-	this.head = parseInt(arg[n]);
-	this.tail = parseInt(arg[n+1]);
-	this.msgCount = parseInt(arg[n+2]);
-	this.maxObjects = parseInt(arg[n+3]); // max number of messages stored in the round buffer, max index is: maxObjects*2-1
+	this.head = parseInt(wr.readNext());
+	this.tail = parseInt(wr.readNext());
+	this.msgCount = parseInt(wr.readNext());
+	this.maxObjects = parseInt(wr.readNext()); // max number of messages stored in the round buffer, max index is: maxObjects*2-1
 
     //console.log("MirrorRoundBuffer.prototype.readSelf "+arg);
 
 	//this.info=arg.slice(3);
-	
-	return arg.length;
+
+
+	return wr.getArgLen(); // TODO remove this, return value is not used anyway
 }
 
 MirrorRoundBuffer.prototype.selfToString=function()
@@ -46,6 +47,37 @@ MirrorRoundBuffer.prototype.selfToString=function()
 
 	return str;
 }
+
+
+MirrorRoundBuffer.prototype.showRoundBufferOnTextArea=function(textDiv, msgIndex)
+{
+	//console.log('showRoundBufferOnTextArea');
+
+
+	if (msgIndex<0)
+	{
+		msgIndex=this.head;
+	}
+
+	for (var i=0; i<=this.maxObjects; ++i)
+	{
+		if (msgIndex in this.children)
+		{
+			var c = this.children[msgIndex];
+			var str= c.objName+": "+c.order+"\n";
+			textDiv.addText(str);
+		}
+
+		msgIndex++;
+		if (msgIndex>=this.maxObjects*2)
+		{
+			msgIndex=0;
+		}
+	}
+	return this.tail;;
+}
+
+
 
 
 

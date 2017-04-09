@@ -17,13 +17,12 @@ function EmpOrder(world, parent, emType, arg)
 	
 }
 
-EmpOrder.prototype.readSelf=function(arg)
-{
-	var n = EmpBase.prototype.readSelf.call(this, arg);
 
-	this.order=hlibRemoveQuotes(arg[n]);
-	
-	return arg.length;
+EmpOrder.prototype.readSelf=function(wr)
+{
+	EmpBase.prototype.readSelf.call(this, wr);
+
+	this.order=hlibRemoveQuotes(wr.readNext());
 }
 
 

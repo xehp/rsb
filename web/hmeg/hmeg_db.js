@@ -10,9 +10,11 @@ HmegDb.prototype.constructor = HmegDb;
 
 
 
-function HmegDb()
+function HmegDb(hmegWin)
 {
 	MirrorDb.call(this); // call super constructor
+	
+	this.hmegWin=hmegWin;
 }
 
 

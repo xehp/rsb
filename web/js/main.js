@@ -9,6 +9,8 @@
 //var wsUri = "ws://b3.eit.se:53456/";
 
 
+// ServerVersion and ClientVersion
+// If version is changed here consider also Version.java in se.eit.rsb_package and cpp/src/version.h
 var expectedServer="www.eit.se/rsb/0.9/server"
 var clientVersion="www.eit.se/rsb/0.9/client"
 

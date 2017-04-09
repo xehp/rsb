@@ -7,6 +7,6 @@ Latest news here:
 www.eit.se/rsb
 
 Copyright (C) 2016 Henrik Björkman (www.eit.se/hb)
-License: www.eit.se/rsb/license
+License see LICENSE.md
 
 

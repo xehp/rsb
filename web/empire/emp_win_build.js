@@ -2,7 +2,7 @@
 // Copyright (C) 2014 Henrik Bjorkman www.eit.se/hb
 // Created 2014-12-26 by Henrik Bjorkman www.eit.se/hb
 
-EmpWinBuild.prototype = Object.create(DivBase.prototype);
+EmpWinBuild.prototype = Object.create(DivMouse.prototype);
 EmpWinBuild.prototype.constructor = EmpWinBuild;
 
 
@@ -11,7 +11,7 @@ EmpWinBuild.prototype.constructor = EmpWinBuild;
 
 function EmpWinBuild(parentWin)
 {
-	DivBase.call(this, parentWin); // call super constructor
+	DivMouse.call(this, parentWin); // call super constructor
 
 	// constants
 	this.offsetY=0;
@@ -98,7 +98,8 @@ EmpWinBuild.prototype.defineDiv=function(divSize)
 	var newPage='';
 
 	// The central area of the page	
-	newPage+='<div id="buildDiv" style="width:'+divSize.x+'px; height:'+divSize.y+'px; overflow-x: scroll; overflow-y: scroll;">';
+	newPage+='<div id="terrainDiv" style="width:'+divSize.x+'px; height:'+divSize.y+'px; overflow-x: scroll; overflow-y: scroll; float:right;">';
+	
 	
 	newPage+='What shall be built';
 	newPage+='<canvas id="myBuildCanvas" width="'+divSize.x+'" height="'+divSize.y+'"></canvas>';
@@ -112,7 +113,7 @@ EmpWinBuild.prototype.defineDiv=function(divSize)
 
 EmpWinBuild.prototype.addEventListenersDiv=function()
 {
-	DivBase.prototype.addEventListenersDiv.call(this, "myBuildCanvas");
+	DivMouse.prototype.addEventListenersDiv.call(this, "myBuildCanvas");
 }
 
 EmpWinBuild.prototype.drawDiv=function()

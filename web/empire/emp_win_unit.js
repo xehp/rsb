@@ -105,7 +105,7 @@ EmpWinUnit.prototype.defineDiv=function(divSize)
 	var curHeight=this.sectorSizeY+this.orderSizeY;
 
 	var newPage='';
-	newPage+='<div style="width:'+divSize.x+'px; height:'+divSize.y+'px; overflow-x: scroll; overflow-y: scroll;">';
+	newPage+='<div id="terrainDiv" style="width:'+divSize.x+'px; height:'+divSize.y+'px; overflow-x: scroll; overflow-y: scroll; float:right;">';
 
 	newPage+='<div>';
 	newPage+='<canvas id="myUnitCanvas" width="'+(divSize.x-32)+'" height="'+this.sectorSizeY+'"></canvas>';
@@ -116,8 +116,9 @@ EmpWinUnit.prototype.defineDiv=function(divSize)
 	newPage+='<input class=empbutton id="upButton" type="button" value="up" onclick="rootDiv.mapSelection=rootDiv.mapSelection.parent; rootDiv.mapSetShowState(2)">';
 	newPage+='<input class=empbutton id="moveButton" type="button" value="move" onclick="rootDiv.mapMoveOrder()">';
 	newPage+='<input class=empbutton id="boardButton" type="button" value="go aboard   " onclick="rootDiv.mapGoAboard()">';
-	newPage+='<input class=empbutton id="unselectButton" type="button" value="unselect" onclick="rootDiv.clearSelectionList(); rootDiv.mapSetShowState(2)"></br>';
-	newPage+='<p>';
+	newPage+='<input class=empbutton id="unselectButton" type="button" value="unselect" onclick="rootDiv.clearSelectionList(); rootDiv.mapSetShowState(2)">';
+	newPage+='<input class=empbutton id="mergeButton" type="button" value="merge" onclick="rootDiv.mergeUnits()">';
+	newPage+='</br><p>';
 	newPage+='</div>';
 
 	newPage+='<div>';
@@ -134,7 +135,7 @@ EmpWinUnit.prototype.addEventListenersDiv=function()
 	console.log("EmpWinUnit.addEventListenersDiv:");
 
 
-	DivBase.prototype.addEventListenersDiv.call(this, "myOrderCanvas");
+	DivMouse.prototype.addEventListenersDiv.call(this, "myOrderCanvas");
 
 	this.addEventListenersDivList();
 }
@@ -216,7 +217,7 @@ EmpWinUnit.prototype.drawDiv=function()
 
 
 	// show selected unit/sector etc
-	this.parentWin.empWinMenu.mapUpdateUpperTextAreas();
+	this.parentWin.empWinMenu.drawDiv();
 }
 
 
@@ -232,7 +233,7 @@ EmpWinUnit.prototype.click=function(mouseUpPos)
 	{
 
 
-		// This was a click in the order area
+		// This was a click in the order area, find out which order and open sub window if needed etc.
 
 		var order= this.getOrder(x);
 		console.log("order "+order);
@@ -266,6 +267,10 @@ EmpWinUnit.prototype.click=function(mouseUpPos)
 			rootDiv.addSelection(rootDiv.mapSelection.id);
 			rootDiv.mapGoAboard();
 			rootDiv.mapSetShowState(0);
+		}
+		else if (order == "assemble")
+		{
+			rootDiv.mapSetShowState(8);
 		}
 		else
 		{

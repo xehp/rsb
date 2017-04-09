@@ -43,12 +43,12 @@ function hlibIsAsciiGraph(ch)
 // This is similar to standard str.split(' ') but it will keep strings together.
 //
 // Our strings contain sub strings such as this line: 
-// query login_or_reg "Welcome to RSB" buttonPrompt 4 "Login" "Reg new account" "Recover pw" "Cancel"
+// qp buttonPrompt login_or_reg "Welcome to RSB" 4 "Login" "Reg new account" "Recover pw" "Cancel"
 // It shall be split up like this:
-// query
+// qp
+// buttonPrompt
 // login_or_reg
 // Welcome to RSB
-// buttonPrompt
 // 4
 // Login
 // Reg new account
@@ -205,6 +205,12 @@ function displayDate()
 }
 */
 
+function extend (className, baseName)
+{
+	className.prototype = Object.create(baseName.prototype);
+	className.prototype.constructor = className;
+}
+
 function sqr(a)
 {
 	return a*a;
@@ -214,6 +220,4 @@ function calcDist(p1, p2)
 {
 	return Math.sqrt(sqr(p1.x-p2.x)+sqr(p1.y-p2.y));
 }
-
-
 

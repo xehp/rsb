@@ -4,19 +4,20 @@
 
 
 
-function MirrorBase(mirrorDb, parent, arg)
+function MirrorBase(mirrorDb, parent, wr)
 {	
 	this.mirrorDb=mirrorDb; // Reference to the mirrorDb, not the EmpWorld as name would suggest.
 	this.parent=parent;
 	this.children=null;
 
 
+
 	// TODO Since we call "this.readSelf(arg);" isn't the following lines superflous?
 
-	this.index=parseInt(arg[0]);
-	this.objName=arg[1];
-	this.id=parseInt(arg[2]);
-	//this.haveScript=parseInt(arg[3]);
+	this.index=parseInt(wr.getRel(0));
+	this.objName=wr.getRel(1);
+	this.id=parseInt(wr.getRel(2));
+	//this.haveScript=parseInt(wr.getRel(3));
 	
 	if (this.id in this.mirrorDb.byId)
 	{
@@ -32,25 +33,26 @@ function MirrorBase(mirrorDb, parent, arg)
 		console.log("MirrorBase: could not add to byId, "+this.id+", objName="+this.objName);
 	}
 
-	this.readSelf(arg);
+	//console.log("MirrorBase "+this.index+" "+this.objName+" "+this.id);
+	
+	this.readSelf(wr);
 
 	//console.log("MirrorBase: '"+this.getPathName()+"'");
 	//this.showSelf();
 }
 
 // Returns the number of arguments parsed by this function. Caller can take care of the remaining arguments.
-MirrorBase.prototype.readSelf=function(arg)
+MirrorBase.prototype.readSelf=function(wr)
 {
-	this.index=parseInt(arg[0]);
-	this.objName=arg[1];
-	var id=parseInt(arg[2]);
+	this.index=parseInt(wr.readNext());
+	this.objName=hlibRemoveQuotes(wr.readNext());
+	var id=parseInt(wr.readNext());
 	if (id!=this.id)
 	{
 		console.log("id must not change ~"+id +" ~"+this.id);
 	}
 	this.id=id;
-	//this.haveScript=parseInt(arg[3]);
-	return 4;
+	wr.skip(1); //this.haveScript=parseInt(arg[3]);
 }
 
 
@@ -132,6 +134,7 @@ MirrorBase.prototype.getNChildObjects=function()
 			if (c.parent != this)
 			{
 				console.log("database is corrupt, this.id=~"+this.id+" c.id=~"+c.id);
+				this.children[i]=null;
 			}
 			
 			n++;
@@ -284,41 +287,26 @@ MirrorBase.prototype.findSubObjectByName=function(objName)
 			//console.log("examine: objName="+this.children[i].objName);
 			if (this.children[i].objName===objName)
 			{
-				console.log("found: objName="+objName);
+				//console.log("found: objName="+objName);
 				return this.children[i];
 			}
 		}
 	}
-	console.log("did not find: objName="+objName+" in ~"+this.id);
+
+	// The following is to help debugging only
+	/*console.log("did not find: objName="+objName+" in ~"+this.id);
+	if (this.children!=null)
+	{
+		for (i in this.children) 
+		{
+			console.log("but did find: i="+i+", objName="+this.children[i].objName);
+		}
+	}*/
+
+
 	return null;		
 }
 
-/*
-// If there are many objects this is inefficient.
-MirrorBase.prototype.findSubObjectByName=function(objName)
-{
-	if (this.children!=null)
-	{
-		var i=0;
-		var len = this.children.length;
-		while (i<len)
-		{
-			if (i in this.children) 
-			{
-				//console.log("examine: objName="+this.children[i].objName);
-				if (this.children[i].objName===objName)
-				{
-					console.log("found: objName="+objName);
-					return this.children[i];
-				}
-			}
-			i++;
-		}
-	}
-	console.log("did not find: objName="+objName);
-	return null;
-}
-*/
 
 
 MirrorBase.prototype.debugDump=function(prefix)
@@ -343,4 +331,11 @@ MirrorBase.prototype.debugDump=function(prefix)
 		}
 	}
 }
+
+
+MirrorBase.prototype.getById=function(id)
+{
+	return this.mirrorDb.getById(id);
+}
+
 

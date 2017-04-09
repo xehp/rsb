@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html>
+
+
+
+<head>
+<title>EITs RSB server client protocol version 0.9</title>
+
+<meta charset=utf-8 />
+
+
+
+<!-- This code is needed for Table of contents TOC -->
+<!-- Put this code in header -->
+<!-- For this to work use h2 for chapter headings (not h1) -->
+<!--http://stackoverflow.com/questions/14138507/creating-table-of-contents-in-html-->
+<!--http://fuelyourcoding.com/scripts/toc/examples/example2.html-->
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jquery/css/layout.css" type="text/css" media="screen" title="no title">
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" type="text/javascript"></script>
+<script src="jquery.tableofcontents.min.js" type="text/javascript" charset="utf-8"></script>
+<script type="text/javascript" charset="utf-8">
+		$(document).ready(function(){ 
+			$("#toc").tableOfContents(
+				$("#wrapper"),        // Scoped to div#wrapper
+				{
+					startLevel: 2,    // H2 and up
+					depth:      3,    // H2 through H4,
+					topLinks:   true // Add "Top" Links to Each Header
+				}
+			); 
+		});
+	</script>
+<style type="text/css" media="screen">h1,h2,h3,h4,h5{position:relative;}a.toc-top-link{position:absolute;width:30px;padding:4px;background:#eee;left:-40px;top:0;font-size:10pt;text-align:center;}#toc{padding-left:30px;}ol{list-style:upper-alpha;}ol ol{list-style:decimal;}ol ol ol{list-style:lower-roman;}ol ol ol ol{list-style:lower-alpha;}</style>
+<script type="text/javascript">
+	var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+	document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+	</script>
+<script type="text/javascript">
+	try {
+	var pageTracker = _gat._getTracker("UA-6871959-17");
+	pageTracker._trackPageview();
+	} catch(err) {}</script>
+
+
+
+
+</head>
+
+<body>
+<a href="http://www.eit.se">www.eit.se</a> 
+<hr>
+
+<!-- <p style="font-size:240%;"><b>EITs RSB server client protocol version 0.9</b></p> -->
+<h1>EITs RSB server client protocol version 0.9</h1>
+
+
+
+<p>
+This document consist of three parts:
+
+<a href="#messages-from-server-to-client">Messages from server to client</a>,
+<a href="#messages-from-client-to-server">Messages from client to server</a> and
+<a href="#connection-procedure">Connection procedure</a>.
+
+<p>
+
+<!-- This code is needed for Table of contents TOC -->
+<!-- Put this code in the beginning of body -->
+<div id="header">
+</div>
+<div id="wrapper">
+<ol id="toc"></ol>
+
+<p>
+
+To understand the protocol it may be best to begin with reading the <a href="#connection-procedure">Connection procedure</a> chapter and jump over to the other two when needed.
+
+
+
+<h2>Messages from server to client</h2>
+
+
+<h3>querryPrompt (qp)</h3>
+
+This command (qp for question or querry prompt) is used when server want something from client.
+<p>
+
+A qp will look like this:
+<pre>
+	qp &lt;sub-command&gt; &lt;queryTag&gt; &lt;defaultTextMessage&gt; [&lt;more&gt;]
+
+	Where:
+		&lt;sub-command&gt;		: Alias Expected Reply Types, this is what type of reply the server is expecting.
+		&lt;queryTag&gt;		: This tells the client which query it is. this is intended to be a unique identifier for every possible question the server has.
+		&lt;defaultTextMessage&gt;	: This is a default text in english. It shall be a quoted string. 
+					  This is a fallback. If the client has not yet implemented the &lt;queryTag&gt; 
+					  it can use this to make a question to the user.
+		&lt;more&gt;			: What comes here depends on expectedReplyType, see chapters below.
+</pre>
+
+See following sub chapters for possible sub commands alias Expected Reply Types.
+
+
+<h4>buttonPrompt</h4>
+
+A Subcommand to querryPrompt.
+<p>
+A number of alternatives will follow after the defaultTextMessage field in the qp message.
+<p>
+The server will expect one of those as the reply. The client can answer with a number or the entire string of that alternative. If it uses the string it shall be quoted.
+<p>
+Example:
+
+<pre>
+	qp buttonPrompt login_or_reg "Welcome to drekkar" 4 "Login" "Reg new account" "Recover pw" "Cancel"
+
+	Where:
+		qp : Server want someting from client
+		buttonPrompt : Server will provide answering alternatives. Only one of these are expected as answer.
+		login_or_reg : This is the queryTag, in this case server tells client program that it shall bring up the login screen.
+		"Welcome to drekkar" : This is the default text for this qp. If client has not implemented the login screen yet it will use a generic dialog and present this text to the user.
+		4 : Four answer alternatives will follow
+		"Login" : Alternative 0 
+		"Reg new account" : Alternative 1
+		"Recover pw" : Alternative 2
+		"Cancel" : Alternative 3
+</pre>
+
+
+If user chooses "Login" the reply in this example can be:<br>
+<pre>
+	0
+</pre>
+
+
+
+
+
+<h4>keyPrompt</h4>
+A Subcommand to querryPrompt.
+<p>
+
+The server wants a keyboard key as reply to this qp.
+<p>
+The client is expected to answer with either:
+<pre>
+	* a number representing the key  
+	* cancel
+</pre>
+
+Example:
+<pre>
+	qp keyPrompt selectAButton ""enter key to use for jump" 
+</pre>
+
+If user chooses "space" the reply in this example can be:
+32
+
+
+
+<h4>promptString</h4>
+A Subcommand to querryPrompt.
+<p>
+
+The server want client to prompt user for a text to be entered.
+Used to ask client/user a question.
+
+The client is expected to answer with either:
+<pre>
+	 * some quoted text  
+	 * or cancel (unquoted)
+</pre>
+
+
+
+
+
+Example:
+<pre>
+	qp promptString enter_new_world_name "enter new world name"
+</pre>
+
+If user chooses "Antarctica" the reply in this example can be:<br>
+"Antarctica"
+<p>
+Note that the string shall be quoted since it might contain spaces.
+<p>
+If the user pressed cancel the reply shall be:<br>
+cancel
+<p>
+Note no quotes around cancel.
+
+
+
+
+
+
+<h3>openGame</h3>
+
+
+Syntax:
+<pre>
+	openGame &lt;type-of-game&gt; &lt;game-name&gt;
+
+	where 
+	&lt;type-of-game&gt; : The name of the type of game to open. See also chapter <a href="#check-client-game-support">Check client game support</a>.
+	&lt;game-name&gt; : The name of the game that player has joined. The player has perhaps entered the name as part of "Ask user what to do".
+</pre>
+
+
+
+
+
+<h3>avatarId</h3>
+
+This is a command sent from server to client to tell it which object that belongs to the user that the client is handling/serving.
+
+Syntax:
+<pre>
+	avatarId &lt;id&gt;
+
+	where &lt;id&gt; is a number that identifies the avatar of the player.
+</pre>
+
+
+
+<h3>mirrorAdd (ma)</h3>
+
+When the server finds an object it wants the client to have it sends a mirrorAdd command.
+<p>
+The syntax for this is: 
+<pre>
+
+	ma &lt;id&gt; &lt;parent id&gt; &lt;type name of object&gt; &lt;object data&gt;
+
+	where:
+	&lt;id&gt; is a numeric ID for the object to be added.
+	&lt;parent id&gt; is a numeric ID for the parent of the object to be added. 
+	&lt;type name of object&gt; There are many different types of objects.
+	&lt;object data&gt; what follows here depends on &lt;type name of object&gt;
+
+</pre>
+
+Client is expected to be able to do this, no reply is expected from client.
+<p>
+
+If there has been a change in an object that the client should already have it sends mirrorUpdate.
+
+
+<h3>mirrorUpdate (mu)</h3>
+
+When the server finds an object that has been changed it sends a mirrorUpdate command.
+<p>
+The syntax for this is same as mirrorAdd message.
+
+<pre>
+	ma &lt;id&gt; &lt;parent id&gt; &lt;type name of object&gt; &lt;object data&gt;
+</pre>
+
+Client is expected to be able to do this, no reply is expected from client.
+
+<p>
+
+<h3>mirrorRemove (mr)</h3>
+
+If an object is to be deleted the server sends mirrorRemove.
+<p>
+Syntax:
+<pre>
+ 	mr &lt;id&gt;
+
+	where:
+	&lt;id&gt; is a numeric ID for the object to be removed.
+</pre>
+
+Client is expected to be able to do this, no reply is expected from client.
+
+
+<h3>mirrorUpdated</h3>
+
+Server sends this when it wants to know that it has not sent to much data to client.
+<p>
+Client shall reply to this with a <a href="cmirrorack">mirrorAck</a> message.
+<p>
+Syntax:
+<pre>
+ 	mirrorUpdated &lt;some-number&gt;
+</pre>
+
+<p>
+Don't mix mirrorUpdated with mirrorUpdate (mu), they are similar names but different messages.
+
+
+
+
+
+
+
+<h3>reconnectServer</h3>
+
+When receiving this command client shall close current connection and open a new.
+
+
+<h3>showWorld</h3>
+
+Client can ignore this.
+Probably something old.
+
+
+
+<h3>RefCommandReply (rcr)</h3>
+
+Server send this as reply to ReferenceClientCommand
+<p>
+Syntax:
+<pre>
+ 	rcr &lt;ref&gt; "&lt;reply-result&gt;"
+	where:
+	&lt;ref&gt; : This is a number or name that is sent back to client. See <a href="#referenceclientcommand-rcc">ReferenceClientCommand (rcc)</a>.
+	&lt;reply-result&gt; : This depend on the command that this was a reply to. See <a href="#referenceclientcommand-rcc">ReferenceClientCommand (rcc)</a>.
+</pre>
+
+NOTE that the reply result string is quoted since it can be more than one line of reply.
+
+
+
+
+
+<h3>consoleMessage</h3>
+
+Server can send this as a responce to consoleInput.
+See <a href="#consoleinput">consoleInput</a> 
+<p>
+Syntax:
+<pre>
+ 	consoleMessage "&lt;message&gt;"
+	where:
+	&lt;message&gt; : This is a message string to be printed to console.
+</pre>
+
+NOTE that the reply result string is quoted since it can be more than one line of reply.
+
+
+
+
+<h2>Messages from client to server</h2>
+
+
+
+<h3>rsb_web_game</h3>
+
+This is the first message sent from client when connecting.
+It will tell server to start the login procedure. 
+The client will need to answer some questions before the game begins.
+<p>
+Syntax:
+<pre>
+ 	rsb_web_game
+</pre>
+
+
+
+
+<h3>mirrorAck</h3>
+
+When server has sent mirrorUpdated message the client shall answer with a mirrorAck message.
+Client shall send this for handshaking. It tells server how much data client has received. Server must not send to much data at a time.
+<p>
+Syntax:
+<pre>
+ 	mirrorAck &lt;same-number-as-server-sent&gt;
+</pre>
+
+
+<h3>consoleInput</h3>
+
+This is a simpler version of ReferenceClientCommand
+<p>
+Syntax:
+<pre>
+ 	consoleInput "&lt;sub command&gt;"
+	where:
+	&lt;sub command&gt; : Sub commands can be addObj, modObjInfo or delObj. See <a href="#referenceclientcommand-rcc">ReferenceClientCommand (rcc)</a>.
+</pre>
+
+
+<h3>ReferenceClientCommand (rcc)</h3>
+
+ReferenceClientCommand is different from consoleInput in that a reference is supplied that the server will use in the reply message.
+<p>
+
+Syntax:
+<pre>
+ 	rcc &lt;ref&gt; &lt;sub command&gt;
+	where:
+	&lt;ref&gt; : This is a number or name that will be sent back in the reply to client. See <a href="#refcommandreply-rcr">ReferenceCommandReply (rcr)</a>.
+	&lt;sub command&gt; : Sub commands can be addObj, modObjInfo or delObj.
+</pre>
+
+See following sub chapters for possible sub commands.
+
+<h4>addObj (aoj)</h4>
+<p>
+Client can send this command when it wants an object to be created by server. It should be sent embedded in an ReferenceClientCommand command.
+<p>
+Syntax:
+
+<pre>
+ 	aoj &lt;parentObjId&gt; &lt;objectTypeStr&gt; &lt;more&gt;
+	where:
+	&lt;parentObjId&gt; : Id of the object to delete.
+	&lt;objectTypeStr&gt; : Type name of the object to create
+	&lt;more&gt; : What is here depends on the tyme of the object to create.
+</pre>
+
+Server will reply ok or nok. 
+<p>
+Syntax:
+
+<pre>
+	ok &lt;objId&gt;
+</pre>
+<p>
+or:
+<pre>
+	nok "&lt;error message&gt;"
+</pre>
+
+
+
+<h4>modObjInfo (moi)</h4>
+
+<p>
+Syntax:
+
+<pre>
+ 	moi &lt;objId&gt; &lt;infoTypeStr&gt; &lt;more&gt;
+	where:
+	&lt;objId&gt; : Id of the object to modify.
+	&lt;infoTypeStr&gt; : Which property of the object to modify. 
+	&lt;more&gt; : What is here depends on the type of the information to create.
+</pre>
+Note infoTypeStr is not same thing as objectTypeStr.
+
+<p>
+Server will reply ok or nok.
+
+
+<h4>delObj (doj)</h4>
+
+<p>
+Syntax:
+
+<pre>
+ 	doj &lt;objId&gt;
+	where:
+	&lt;objId&gt; : Id of the object to delete.
+</pre>
+
+Server will reply ok or nok.
+
+
+
+<h3>avatarPos</h3>
+
+Syntax:
+<pre>
+ 	avatarPos &lt;pos&gt; &lt;client-squence-number&gt;
+	where:
+	&lt;pos&gt;			 : This part is different depending on game.
+	&lt;client-sequence-number&gt; : This is used for handshaking.
+	
+</pre>
+
+
+
+<h3>actionKey</h3>
+
+This tells server that player pressed the main mouse button (usually the left button, mouse button number 1).
+<p>
+Syntax:
+<pre>
+ 	actionKey
+	
+</pre>
+
+
+
+<h2>Connection procedure</h2>
+
+<p>
+Command lines are to be ended with linefeed (LF) if nothing else is said. For the full syntax of each command/message see respective chapter about it.
+<p>
+The client program don't need to have implemented handling for all these questions. It can use a generic code for all qp/buttonPrompt/stringPrompt etc using the default text sent from server to let user know what server wants to know.
+<p>
+
+<h3>Connect</h3>
+
+Client connects to the server port. Typically TCP port 8080.
+
+<h3>Normal or web</h3>
+
+Client must first tell server if it is a normal (aka native) client or a websocket client.
+
+
+normal: Skip websocket below (if client is not websocket).
+<p>
+websocket:
+
+Client sends a GET, HEAD or other html command to tell server it is a web browser.
+When html has been upgraded to websocket connection the session continues same as for a normal client save for the websocket overhead.
+ 
+<h3>Start talking</h3>
+
+
+<p>
+Client shall now tell server that it wants to talk.
+<p>
+To do so it sends command: 
+<pre>
+rsb_web_game
+</pre>
+
+<h3>Verifying protocol and version</h3>
+<p>
+Next server will tell client that it is a server that understands the RSB server client protocol version 0.9.
+
+<p>
+To do this server sends: 
+<pre>
+	www.eit.se/rsb/0.9/server
+</pre>
+
+<p>
+Client shall now tell server that it is a client that understands the RSB server client protocol
+<p>
+To do this client sends:
+<pre>
+	www.eit.se/rsb/0.9/client
+</pre>
+
+
+<p>
+
+After both having verified that they can communicate with each other the server will now drive the session. 
+Server does so by sending queries to client.
+
+<p>
+
+<h3>Check client game support</h3>
+
+<p>
+Next server will ask the client which games it can do.
+
+
+<p>
+To do so it will send a qp command. 
+More exactly a qp command with expected reply as string and tag "game_support".
+<p>
+For details see the qp command. In this case it will look like this:
+<pre>
+	qp stringPrompt game_support "Which games does this client support?"
+</pre>
+<p>
+For details on the qp message see that chapter.
+<p>
+The client shall answer, answer can be:
+<pre>
+	"Yukigassen"
+</pre>
+Note that the reply shall be a quoted string. More than one game name can be given within the quotes if the client program can do more than one game.
+<p>
+
+<h3>Player Login Or Recover Pw</h3>
+<p>
+After checking game support the login screen is to be shown to user/player.
+<p>
+Server sends command
+<pre>
+	qp buttonPrompt login_or_reg "Welcome to drekkar" 4 "Login" "Reg new account" "Recover pw" "Cancel"
+</pre>
+<p>
+A typical reply from client can be:
+<pre>
+	0
+</pre>
+
+Which means user want to login.
+
+In this example we assume the player has already registered so he or she wants to login.
+
+
+<h3>Player Login</h3>
+<p>
+When user want to login the server will ask for username.
+
+
+Server sends command:
+<pre>
+	qp promptString "enter_player_name" "enter your name"
+</pre>
+
+
+A typical reply from client can be:
+<pre>
+	"aaa"
+</pre>
+Note that the username shall be inside quotes as always on a promptString.
+
+<p>
+After that server asks for password:
+<pre>
+	qp promptString "enter_player_pw" "give password"
+</pre>
+
+A typical reply from client can be:
+<pre>
+	"qwerty"
+</pre>
+
+
+If the password was correct server will send:
+<pre>
+	qp buttonPrompt "login_ok" "login ok" 1 "OK"
+</pre>
+
+This is just to tell client it was OK. But client must answer:
+<pre>
+	"OK"
+</pre>
+	
+Client could also have answered 0 since that was the alternative for "OK".
+
+
+<p>
+<h3>Player Preferences</h3>
+<p>
+After a successfull login the server will send players key mappings etc.
+These are stored on server and not on client side.
+
+For example the server can send:
+<pre>
+	playerPreference jumpUp "32"
+	playerPreference moveForward "65"
+</pre>
+
+
+The client does not need to answer these commands, just remember the settings if they are even needed.
+<p>
+TODO We shall let the client ask for these later...
+
+
+<p>
+
+<h3>Ask user what to do</h3>
+<p>
+After login and player preferences the server will ask client what the user wants to do.
+<p>
+
+This is done with a qp message with the tag "join_or_create". In this case it would look like this:
+<pre>
+	qp promptButtons join_or_create "Do you want to join an existing game or start a new?" 5 "Continue game" "Start new game" "List existing games" "Account settings" "Cancel"
+</pre>
+
+<p>
+If for example the user wants to start a new game the then the client shall send:
+<pre>
+	1	
+</pre>
+
+That is for alternative 1 which is "Start new game" in the qp/promptButtons/join_or_create message.
+
+<p>
+What follows may vary.
+The server can continue with some more questions like this until it is time to startup the game.
+<pre>
+    	qp buttonPrompt "joining_world" "joining world..." 1 "OK"
+</pre>
+
+<p>
+
+<h3>Open game</h3>
+
+When server launches the game it will send an "openGame" command. 
+<p>
+After that the server will send mirror messages and it is instead the client that sends commands.
+
+<p>
+
+
+
+<h3>Mirroring</h3>
+
+Once a game is open the server will send mirroring messages to client while client can send commads to server.
+
+
+<p>
+<hr>
+
+<footer>
+copyright (c) 2016 Henrik Bj&ouml;rkman <a href="http://www.eit.se/hb">www.eit.se/hb</a> 
+</footer>
+
+
+
+
+<p>
+
+
+
+
+
+
+<!-- This code is needed for Table of contents TOC -->
+<!-- Put this code after all chapters that are to be listed in TOC -->
+</div>
+
+
+
+
+
+
+</body>
+</html>
