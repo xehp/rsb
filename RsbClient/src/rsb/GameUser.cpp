@@ -18,7 +18,7 @@
 #include "WordWriter.h"
 #endif
 #include "RsbRoundBuffer.h"
-#include "YukigassenAvatar.h"
+//#include "YukigassenAvatar.h"
 #include "GameUser.h"
 
 GameUser::GameUser() :

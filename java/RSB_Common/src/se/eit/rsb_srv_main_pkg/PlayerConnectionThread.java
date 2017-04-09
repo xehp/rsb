@@ -1,6 +1,6 @@
 // PlayerConnectionThread.java
 //
-// Copyright (C) 2012 Henrik Bj��rkman www.eit.se
+// Copyright (C) 2012 Henrik Bjorkman www.eit.se
 //
 // This is the thread that handles the connection from a client.
 // One instance of this class per client.
@@ -10,7 +10,7 @@
 // http://courseweb.xu.edu.ph/courses/ics10/tutorials/Java_Unleashed_Second_Edition/ch25.htm#UsingUDPIP
 //
 // History:
-// Created by Henrik Bj��rkman 1997-05-03
+// Created by Henrik Bjorkman 1997-05-03
 // Moved to own file. Henrik 1999-09-08
 // Changed to use swing. Henrik 2012-10-14 
 // Changed to udp. Henrik 2012-10-16

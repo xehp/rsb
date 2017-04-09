@@ -1,8 +1,11 @@
 /*
 MirrorContainer.h
 
+Mirror Container is a mirror object that can contain other mirror objects.
+
+
 www.eit.se/rsb
-Copyright (C) 2016 Henrik Björkman (www.eit.se/hb)
+Copyright (C) 2017 Henrik Björkman (www.eit.se/hb)
 License: www.eit.se/rsb/license
 
 History:

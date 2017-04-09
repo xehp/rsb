@@ -42,6 +42,7 @@ Created 2015 by Henrik Bjorkman www.eit.se
 #include "EmpireWorld.h"
 #endif
 #ifndef RSB_SERVER
+/*
 #include "YukigassenAvatar.h"
 #include "YukigassenVoxelMap.h"
 #include "YukigassenBlockRoom.h"
@@ -53,6 +54,7 @@ Created 2015 by Henrik Bjorkman www.eit.se
 #include "YukigassenTexturedRoom.h"
 #include "YukigassenWorld.h"
 #include "YukigassenTopRoom.h"
+*/
 #endif
 #include "MirrorFactory.h"
 
@@ -212,6 +214,7 @@ MirrorBase *mirrorFactoryCreate(const char* typeName)
 			break;
 		}
 #ifndef RSB_SERVER
+		/*
 		case 'Y':
 		{
 			const char ch2=typeName[10];
@@ -284,6 +287,7 @@ MirrorBase *mirrorFactoryCreate(const char* typeName)
 			}
 			break;
 		}
+		*/
 #endif
 		default:
 		{
